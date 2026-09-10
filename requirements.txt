@@ -1,0 +1,7 @@
+python-dotenv==1.2.3
+PyYAML==6.0.2
+langchain==1.4.0
+langchain-core==1.6.2
+langchain-openai==1.6.2
+langchain-google-genai==4.4.0
+langchain-text-splitters==1.1.2

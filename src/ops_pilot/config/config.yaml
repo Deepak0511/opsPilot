@@ -1,0 +1,8 @@
+llm:
+  provider: openai
+
+  gemini:
+    model_name: gemini-3.5-flash-lite
+
+  openai:
+    model_name: gpt-4o-mini
