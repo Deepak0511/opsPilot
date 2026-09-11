@@ -48,6 +48,8 @@ class Settings:
         self.config["env_gemini_api_key"] = os.getenv("GEMINI_API_KEY")
         self.config["env_huggingface_api_key"] = os.getenv("HUGGINGFACE_API_KEY")
         self.config["env_data_dir"] = os.getenv("DATA_DIR", "./data")
+        #self.config["env_db_path"] = os.getenv("DB_PATH", f"{self.config['env_data_dir']}/ops_pilot.db")
+        self.config["env_db_path"] = os.path.expandvars(os.environ["DB_PATH"])
 
     def _load_yaml(self, path):
         """
@@ -84,4 +86,4 @@ class Settings:
         """
         return self.config.get(key)
 
-settings = Settings()
+lookup_for_setting = Settings()

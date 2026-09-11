@@ -3,7 +3,7 @@
 __author__ = "Deepak Kumar Chaudhary <deepak.techprofile@gmail.com>"
 
 
-from ops_pilot.utils.models import load_llm
+from ops_pilot.utils.large_language_models import load_llm
 import streamlit as st
 
 # Sanity Test the LLM connectivity
