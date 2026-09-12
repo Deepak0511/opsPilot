@@ -3,6 +3,7 @@ import sqlite3
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.ticket import Ticket
+from ops_pilot.utils.logger import log
 
 DB_PATH = lookup_for_setting["env_db_path"] 
 
@@ -14,6 +15,7 @@ def get_connection():
 
 def find_ticket_by_id(ticket_id: str) -> Optional[Ticket]:
     """ fetches ticket by id and returns a Ticket object if found, else returns None """
+    log.debug(f"Executing find_ticket_by_id for ticket_id='{ticket_id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -132,6 +134,7 @@ def search_tickets(title: Optional[str] = None, description: Optional[str] = Non
                    system_id: Optional[str] = None, assigned_to: Optional[str] = None,
                    start_date: Optional[str] = None, end_date: Optional[str] = None) -> list[Ticket]:
     """Returns a list of Ticket objects based on multiple search criteria"""
+    log.debug(f"Executing search_tickets with filters: title={title}, category={category}, employee={employee_id}")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -170,6 +173,7 @@ def search_tickets(title: Optional[str] = None, description: Optional[str] = Non
 
 def create_ticket(ticket: Ticket) -> Ticket:
     """Persists a new ticket in the database and returns the created Ticket object"""
+    log.debug(f"Executing create_ticket for ticket_id='{ticket.id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -188,6 +192,7 @@ def create_ticket(ticket: Ticket) -> Ticket:
 
 def update_ticket(ticket: Ticket) -> Ticket:
     """Updates an existing ticket in the database and returns the updated Ticket object"""
+    log.debug(f"Executing update_ticket for ticket_id='{ticket.id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()

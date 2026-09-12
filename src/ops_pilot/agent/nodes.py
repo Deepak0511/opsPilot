@@ -10,9 +10,9 @@ from ops_pilot.tools.system_toolchain import count_systems_tool
 from ops_pilot.tools.system_toolchain import search_systems_tool
 from ops_pilot.tools.kb_toolchain import count_knowledge_base_articles_tool
 from ops_pilot.tools.kb_toolchain import search_knowledge_base_tool
-from ops_pilot.agent.state import AgentState
+from ops_pilot.agent.state import AgentState, TriageDecision
 from langchain_core.messages import SystemMessage
-from pydantic import BaseModel, Field
+from typing import cast
 from ops_pilot.prompts.system_prompt import (
     TRIAGE_MANAGER_PROMPT,
     KNOWLEDGE_BASE_MANAGER_PROMPT,
@@ -21,14 +21,17 @@ from ops_pilot.prompts.system_prompt import (
     TICKET_LOGGER_MANAGER_PROMPT,
 )
 from ops_pilot.utils.large_language_models import load_llm
+from ops_pilot.utils.logger import log
 
 # ── KB Node: can ONLY search knowledge base ──
 kb_tools = [search_knowledge_base_tool, count_knowledge_base_articles_tool]
 kb_llm = load_llm().bind_tools(kb_tools)
 
 def kb_node(state: AgentState) -> dict:
+    log.info("Agent entered node: kb_node")
     sys_msg = SystemMessage(content=KNOWLEDGE_BASE_MANAGER_PROMPT)
-    response = kb_llm.invoke([sys_msg] + state["messages"])   # This LLM can ONLY call KB tools
+    response = kb_llm.invoke([sys_msg] + state.messages)   # This LLM can ONLY call KB tools
+    log.debug(f"kb_node response: {response}")
     return {"messages": [response], "current_branch": "kb_node"}
 
 
@@ -37,8 +40,10 @@ infra_tools = [search_systems_tool, count_systems_tool]
 infra_llm = load_llm().bind_tools(infra_tools)
 
 def infra_node(state: AgentState) -> dict:
+    log.info("Agent entered node: infra_node")
     sys_msg = SystemMessage(content=INFRASTRUCTURE_MANAGER_PROMPT)
-    response = infra_llm.invoke([sys_msg] + state["messages"])  # Can ONLY check systems
+    response = infra_llm.invoke([sys_msg] + state.messages)  # Can ONLY check systems
+    log.debug(f"infra_node response: {response}")
     return {"messages": [response], "current_branch": "infra_node"}
 
 
@@ -47,8 +52,10 @@ ticket_read_tools = [search_ticket_by_id_tool, search_tickets_tool]
 ticket_read_llm = load_llm().bind_tools(ticket_read_tools)
 
 def ticket_read_node(state: AgentState) -> dict:
+    log.info("Agent entered node: ticket_read_node")
     sys_msg = SystemMessage(content=TICKET_READER_MANAGER_PROMPT)
-    response = ticket_read_llm.invoke([sys_msg] + state["messages"])  # Can ONLY read, never create
+    response = ticket_read_llm.invoke([sys_msg] + state.messages)  # Can ONLY read, never create
+    log.debug(f"ticket_read_node response: {response}")
     return {"messages": [response], "current_branch": "ticket_read_node"}
 
 
@@ -57,25 +64,25 @@ ticket_write_tools = [create_ticket_tool, update_ticket_tool]
 ticket_write_llm = load_llm().bind_tools(ticket_write_tools)
 
 def ticket_logger_node(state: AgentState) -> dict:
+    log.info("Agent entered node: ticket_logger_node")
     sys_msg = SystemMessage(content=TICKET_LOGGER_MANAGER_PROMPT)
-    response = ticket_write_llm.invoke([sys_msg] + state["messages"])  # Can ONLY write tickets
+    response = ticket_write_llm.invoke([sys_msg] + state.messages)  # Can ONLY write tickets
+    log.debug(f"ticket_logger_node response: {response}")
     return {"messages": [response], "current_branch": "ticket_logger_node"}
 
-## So Who decides which node to go to ?##
-# Answer:
-## Triage node: LLM classifies the user's intent using Structured Output
-class TriageDecision(BaseModel):
-    next_node: str = Field(
-        description="The next node to route to. Must be one of: kb_node, infra_node, ticket_read_node, ticket_logger_node"
-    )
 
 triage_llm = load_llm()  # No tools bound — it can only think and respond
 structured_triage_llm = triage_llm.with_structured_output(TriageDecision)
 
 def triage_node(state: AgentState) -> dict:
     """Classifies the user's intent. No tools — just reasoning."""
+    log.info("Agent entered node: triage_node")
     sys_msg = SystemMessage(content=TRIAGE_MANAGER_PROMPT)
-    decision = structured_triage_llm.invoke([sys_msg] + state["messages"])
+    decision = cast(
+        TriageDecision,
+        structured_triage_llm.invoke([sys_msg] + state.messages),
+    )
+    log.info(f"Triage routed to: {decision.next_node}")
     return {"next_node": decision.next_node}
 
 # Export all tools for the shared ToolNode

@@ -6,3 +6,5 @@ llm:
 
   openai:
     model_name: gpt-4o-mini
+
+log_dir: "../tmp/ops_pilot/logs"

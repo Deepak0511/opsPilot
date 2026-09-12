@@ -11,10 +11,12 @@ from pathlib import Path
 from typing import Optional
 
 # Ensure project root / src is on sys.path for direct CLI execution
-# (e.g., when executed via `python src/ops_pilot/agent/visualize_graph.py`)
 CURRENT_DIR = Path(__file__).resolve().parent
-SRC_DIR = CURRENT_DIR.parent.parent
-PROJECT_ROOT = SRC_DIR.parent
+PROJECT_ROOT = CURRENT_DIR.parent
+SRC_DIR = PROJECT_ROOT / "src"
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 

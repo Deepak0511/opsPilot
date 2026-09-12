@@ -1,6 +1,7 @@
 from typing import Optional
 from langchain_core.tools import tool
 from ops_pilot.models.employee import Employee
+from ops_pilot.utils.logger import log
 
 import ops_pilot.repository.employee_repository as employee_repository
 
@@ -12,6 +13,7 @@ def search_employee_tool(name: Optional[str] = None, email: Optional[str] = None
     Use this to resolve a person's identity before creating or assigning tickets.
     Returns a list — if more than one result, ask the user to refine.
     """
+    log.info(f"Tool invoked: search_employee_tool(name={name}, email={email}, department={department})")
     if not name and not email:
         raise ValueError("At least name or email must be provided.")
 
@@ -40,6 +42,7 @@ def count_employees_in_department_tool(department: str) -> int:
     Call this BEFORE get_employees_by_department to check the result-set size.
     If the count exceeds 10, use pagination via offset/limit.
     """
+    log.info(f"Tool invoked: count_employees_in_department_tool(department={department})")
     return employee_repository.count_employees_by_department(department)
 
 
@@ -49,6 +52,7 @@ def get_employees_by_department_tool(department: str, offset: int = 0, limit: in
     Always call count_employees_in_department first to know total size.
     Default page size is 10.
     """
+    log.info(f"Tool invoked: get_employees_by_department_tool(department={department}, offset={offset}, limit={limit})")
     employees = employee_repository.find_employees_by_department(department, offset, limit)
     if not employees:
         raise ValueError(f"No employees found in department '{department}'.")

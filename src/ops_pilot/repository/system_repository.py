@@ -3,6 +3,7 @@ import sqlite3
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.system import System
+from ops_pilot.utils.logger import log
 
 DB_PATH = lookup_for_setting["env_db_path"]
 
@@ -13,6 +14,7 @@ def get_connection():
 
 def find_system_by_id(system_id: str) -> Optional[System]:
     """ fetches system by id and returns a System object if found, else returns None """
+    log.debug(f"Executing find_system_by_id for system_id='{system_id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -26,6 +28,7 @@ def find_system_by_id(system_id: str) -> Optional[System]:
 
 def search_systems_by_name(name: str) -> list[System]:
     """Returns a list of System objects whose names contain the given substring (case-insensitive)"""
+    log.debug(f"Executing search_systems_by_name for name containing '{name}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -54,6 +57,7 @@ def search_systems_by_status(status: str) -> list[System]:
 
 def create_system(system: System) -> System:
     """Persists a new system in the database and returns the created System object"""
+    log.debug(f"Executing create_system for system_id='{system.id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()

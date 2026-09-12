@@ -1,5 +1,5 @@
 # Load LLM models from the settings configuration.
-from ops_pilot.config.settings import settings
+from ops_pilot.config.settings import lookup_for_setting
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -7,7 +7,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 def load_llm(provider=None):
 
     # Focus on the LLM configuration section only.
-    llm_config = settings["llm"]
+    llm_config = lookup_for_setting["llm"]
 
     if provider is None:
         provider = llm_config["provider"].lower()
@@ -15,7 +15,7 @@ def load_llm(provider=None):
     #provider = provider.lower()
 
     if provider == "openai":
-        api_key = settings["env_openai_api_key"]
+        api_key = lookup_for_setting["env_openai_api_key"]
         if not api_key:
             raise ValueError(
                 "OPENAI_API_KEY is not set. Add OPENAI_API_KEY=your-api-key in the environment."
@@ -28,7 +28,7 @@ def load_llm(provider=None):
         )
 
     elif provider == "gemini":
-        api_key = settings["env_gemini_api_key"]
+        api_key = lookup_for_setting["env_gemini_api_key"]
         if not api_key:
             raise ValueError(
                 "GEMINI_API_KEY is not set. Add GEMINI_API_KEY=your-api-key in the environment."

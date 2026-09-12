@@ -50,6 +50,11 @@ class Settings:
         self.config["env_data_dir"] = os.getenv("DATA_DIR", "./data")
         #self.config["env_db_path"] = os.getenv("DB_PATH", f"{self.config['env_data_dir']}/ops_pilot.db")
         self.config["env_db_path"] = os.path.expandvars(os.environ["DB_PATH"])
+        
+        # Resolve log_dir relative to project root
+        project_root = Path(__file__).parent.parent.parent.parent
+        log_dir_relative = self.config.get("log_dir", "../tmp/ops_pilot/logs")
+        self.config["env_log_dir"] = str((project_root / log_dir_relative).resolve())
 
     def _load_yaml(self, path):
         """

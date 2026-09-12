@@ -3,7 +3,7 @@ import sqlite3
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.employee import Employee
-
+from ops_pilot.utils.logger import log
 
 DB_PATH = lookup_for_setting["env_db_path"]
 
@@ -14,19 +14,23 @@ def get_connection():
 
 def find_employee_by_id(employee_id: str) -> Optional[Employee]:
     """ fetches employee by id and returns an Employee object if found, else returns None """
+    log.debug(f"Executing find_employee_by_id for employee_id='{employee_id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM employees WHERE id = ?", (employee_id,))
         row = cursor.fetchone()
         if row:
+            log.debug(f"Found employee: {row['name']}")
             return Employee.model_validate(dict(row))  # sqlite3.Row → dict → Pydantic
+        log.debug(f"Employee not found: '{employee_id}'")
         return None
     finally:
         conn.close()
 
 def search_employees_by_name(name: str) -> list[Employee]:
     """Returns a list of Employee objects whose names contain the given substring (case-insensitive)"""
+    log.debug(f"Executing search_employees_by_name for name containing '{name}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -35,6 +39,7 @@ def search_employees_by_name(name: str) -> list[Employee]:
             (f"%{name.lower()}%",)
         )
         rows = cursor.fetchall()
+        log.debug(f"Found {len(rows)} matching employees.")
         return [Employee.model_validate(dict(row)) for row in rows]
     finally:
         conn.close()

@@ -3,6 +3,7 @@ import sqlite3
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.knowledge_base import KnowledgeBase
+from ops_pilot.utils.logger import log
 
 DB_PATH = lookup_for_setting["env_db_path"]
 
@@ -11,15 +12,22 @@ def get_connection():
     conn.row_factory = sqlite3.Row    # Return dicts, not tuples
     return conn
 
+def _row_to_kb(row: sqlite3.Row) -> KnowledgeBase:
+    d = dict(row)
+    if 'tags' in d and isinstance(d['tags'], str):
+        d['tags'] = d['tags'].split(',') if d['tags'] else []
+    return KnowledgeBase.model_validate(d)
+
 def find_knowledge_base_by_id(kb_id: str) -> Optional[KnowledgeBase]:
     """ fetches knowledge base article by id and returns a KnowledgeBase object if found, else returns None """
+    log.debug(f"Executing find_knowledge_base_by_id for kb_id='{kb_id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM knowledge_base WHERE id = ?", (kb_id,))
         row = cursor.fetchone()
         if row:
-            return KnowledgeBase.model_validate(dict(row))  # sqlite3.Row → dict → Pydantic
+            return _row_to_kb(row)
         return None
     finally:
         conn.close()
@@ -27,6 +35,7 @@ def find_knowledge_base_by_id(kb_id: str) -> Optional[KnowledgeBase]:
 # Tries to find KB articles by title.
 def search_knowledge_base_by_title(title: str) -> list[KnowledgeBase]:
     """Returns a list of KnowledgeBase objects whose titles contain the given substring (case-insensitive)"""
+    log.debug(f"Executing search_knowledge_base_by_title for title containing '{title}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -35,7 +44,7 @@ def search_knowledge_base_by_title(title: str) -> list[KnowledgeBase]:
             (f"%{title.lower()}%",)
         )
         rows = cursor.fetchall()
-        return [KnowledgeBase.model_validate(dict(row)) for row in rows]
+        return [_row_to_kb(row) for row in rows]
     finally:
         conn.close()
 
@@ -49,7 +58,7 @@ def search_knowledge_base_by_category(category: str) -> list[KnowledgeBase]:
             (f"%{category.lower()}%",)
         )
         rows = cursor.fetchall()
-        return [KnowledgeBase.model_validate(dict(row)) for row in rows]
+        return [_row_to_kb(row) for row in rows]
     finally:
         conn.close()
 
@@ -64,13 +73,14 @@ def search_knowledge_base_by_tag(tag: str) -> list[KnowledgeBase]:
             (f"%{tag.lower()}%",)
         )
         rows = cursor.fetchall()
-        return [KnowledgeBase.model_validate(dict(row)) for row in rows]
+        return [_row_to_kb(row) for row in rows]
     finally:
         conn.close()
 
 # We need to create a KB Article if any new kind of issue is found.
 def create_knowledge_base(kb: KnowledgeBase) -> KnowledgeBase:
     """Persists a new knowledge base article in the database and returns the created KnowledgeBase object"""
+    log.debug(f"Executing create_knowledge_base for kb_id='{kb.id}'")
     conn = get_connection()
     try:
         cursor = conn.cursor()

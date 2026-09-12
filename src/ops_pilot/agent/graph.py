@@ -1,6 +1,7 @@
 from ops_pilot.agent.state import AgentState
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
+from ops_pilot.utils.logger import log
 from ops_pilot.agent.nodes import (
     triage_node, kb_node, infra_node, 
     ticket_read_node, ticket_logger_node,
@@ -14,6 +15,7 @@ from ops_pilot.agent.router import triage_router, route_after_agent, route_after
 tool_executor = ToolNode(all_tools)
 
 def create_agent():
+    log.info("Compiling StateGraph for ops_pilot agent")
     graph = StateGraph(AgentState)
 
     # ── Register nodes ──

@@ -4,6 +4,7 @@ from datetime import date
 from typing import Optional
 from langchain_core.tools import tool
 from ops_pilot.models.ticket import Ticket
+from ops_pilot.utils.logger import log, audit_log
 
 import ulid
 import dateparser
@@ -19,6 +20,7 @@ import ops_pilot.repository.system_repository as system_repository
 @tool
 def search_ticket_by_id_tool(ticket_id: str) -> Ticket:
     """Searches for a ticket by its ID."""
+    log.info(f"Tool invoked: search_ticket_by_id_tool(ticket_id={ticket_id})")
     ticket = ticket_repository.find_ticket_by_id(ticket_id)
     if not ticket:
         raise ValueError(f"Ticket with ID {ticket_id} does not exist.")
@@ -49,6 +51,7 @@ def search_tickets_tool(employee_id: str, title: Optional[str] = None, descripti
     At least one optional parameter must be supplied alongside employee_id.
     May return multiple tickets if filters cannot narrow to a single result.
     """
+    log.info(f"Tool invoked: search_tickets_tool(employee_id={employee_id}, title={title}, category={category}, system_id={system_id})")
     if not any([title, description, category, system_id, assigned_to, created_date_str]):
         raise ValueError("At least one search parameter besides employee_id must be provided.")
 
@@ -94,6 +97,7 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
         beforehand. To keep things modular, Employee ID and System ID lookup can be done using their respective tools
         and repositories.
     """
+    log.info(f"Tool invoked: create_ticket_tool(employee_id={employee_id}, title={title}, system_id={system_id})")
     # Validate employee_id and system_id
     employee = employee_repository.find_employee_by_id(employee_id)
     if not employee:
@@ -115,13 +119,14 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
         category=category,
         system_id=system_id,
         assigned_to=assigned_to,
-        created_date=datetime.now(),
-        updated_date=datetime.now(),
+        created_date=date.today(),
+        updated_date=date.today(),
         notes=notes
     )
     
     # Persist the ticket in the database
     created_ticket = ticket_repository.create_ticket(ticket)
+    audit_log.info(f"Ticket {created_ticket.id} created by employee {employee_id} for system {system_id}")
     return created_ticket
 
 ## Update ticket - only status, priority, assigned_to and notes can be updated.
@@ -129,6 +134,7 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
 def update_ticket_tool(ticket_id: str, status: Optional[str] = None, priority: Optional[str] = None,
                     assigned_to: Optional[str] = None, notes: Optional[str] = None) -> Ticket:
         """Updates an existing ticket in the system. Only status, priority, assigned_to and notes can be updated."""
+        log.info(f"Tool invoked: update_ticket_tool(ticket_id={ticket_id}, status={status}, priority={priority})")
         ticket = ticket_repository.find_ticket_by_id(ticket_id)
         if not ticket:
             raise ValueError(f"Ticket with ID {ticket_id} does not exist.")
@@ -144,10 +150,11 @@ def update_ticket_tool(ticket_id: str, status: Optional[str] = None, priority: O
             ticket.notes = notes
     
         # Update the updated_date to now
-        ticket.updated_date = datetime.now()
+        ticket.updated_date = date.today()
     
         # Persist the updated ticket in the database
         updated_ticket = ticket_repository.update_ticket(ticket)
+        audit_log.info(f"Ticket {updated_ticket.id} updated (status={status}, priority={priority})")
         return updated_ticket
 
 

@@ -1,6 +1,7 @@
 from typing import Optional
 from langchain_core.tools import tool
 from ops_pilot.models.system import System
+from ops_pilot.utils.logger import log
 
 import ops_pilot.repository.system_repository as system_repository
 
@@ -11,6 +12,7 @@ def count_systems_tool(name: Optional[str] = None, status: Optional[str] = None)
     Call this BEFORE search_systems to gauge result-set size.
     Helps the AI decide whether to refine filters or fetch directly.
     """
+    log.info(f"Tool invoked: count_systems_tool(name={name}, status={status})")
     return system_repository.count_systems(name=name, status=status)
 
 
@@ -21,6 +23,7 @@ def search_systems_tool(name: Optional[str] = None, status: Optional[str] = None
     whose ID can then be used for ticket creation or lookup.
     Use count_systems first to check result-set size.
     """
+    log.info(f"Tool invoked: search_systems_tool(name={name}, status={status})")
     if not any([name, status]):
         raise ValueError("At least one search parameter (name or status) must be provided.")
 

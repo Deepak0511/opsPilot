@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
+from typing import Literal
 
 
 
@@ -11,20 +12,14 @@ class AgentState(BaseModel):
     messages: Annotated[list[BaseMessage], add_messages] = Field(default_factory=list)
     current_branch: Optional[str] = None
     next_node: Optional[str] = None
-    # ✅ Validates types at runtime — wrong types raise ValidationError
-    # ✅ default_factory=list gives a clean empty state without manual {"messages": []}
 
 
-# # ----- Tools -------------
 
-# tools = [
-#     search_employee,
-#     search_ticket_by_id,
-#     create_ticket,
-#     search_knowledge_base,
-#     search_systems,
-# ]
 
-# ------- Bind tools with LLM -----------
-# llm = load_llm()
-# llm_with_tools = llm.bind_tools(tools)
+class TriageDecision(BaseModel):
+    next_node: Literal[
+        "kb_node",
+        "infra_node",
+        "ticket_read_node",
+        "ticket_logger_node",
+    ]
