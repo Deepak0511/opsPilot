@@ -93,3 +93,19 @@ def delete_system(system_id: str) -> None:
     finally:
         conn.close()
 
+def count_systems(name: Optional[str] = None, status: Optional[str] = None) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        query = "SELECT COUNT(*) FROM systems WHERE 1=1"
+        params = []
+        if name:
+            query += " AND LOWER(name) LIKE ?"
+            params.append(f"%{name.lower()}%")
+        if status:
+            query += " AND LOWER(status) LIKE ?"
+            params.append(f"%{status.lower()}%")
+        cursor.execute(query, tuple(params))
+        return cursor.fetchone()[0]
+    finally:
+        conn.close()

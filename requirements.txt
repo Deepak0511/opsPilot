@@ -9,3 +9,9 @@ langchain-text-splitters==1.1.2
 
 # UI dependencies.
 streamlit==1.63.0
+
+# ULID for easy search and sort. Generates unique identifiers based on time.
+ulid-py==1.1.0
+
+#Natual Language Date Parser
+dateparser==1.1.8

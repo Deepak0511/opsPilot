@@ -39,7 +39,43 @@ def search_employees_by_name(name: str) -> list[Employee]:
     finally:
         conn.close()
 
-# I don't think this is required but anyway, will come back and revise. 
+def find_employee_by_email(email: str) -> Optional[Employee]:
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM employees WHERE LOWER(email) = ?", (email.lower(),))
+        row = cursor.fetchone()
+        if row:
+            return Employee.model_validate(dict(row))
+        return None
+    finally:
+        conn.close()
+
+def count_employees_by_department(department: str) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM employees WHERE LOWER(department) = ?",
+            (department.lower(),)
+        )
+        return cursor.fetchone()[0]
+    finally:
+        conn.close()
+
+def find_employees_by_department(department: str, offset: int = 0, limit: int = 10) -> list[Employee]:
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM employees WHERE LOWER(department) = ? LIMIT ? OFFSET ?",
+            (department.lower(), limit, offset)
+        )
+        rows = cursor.fetchall()
+        return [Employee.model_validate(dict(row)) for row in rows]
+    finally:
+        conn.close()
+
 def create_employee(employee: Employee) -> Employee:
     """Persists a new employee in the database and returns the created Employee object"""
     conn = get_connection()

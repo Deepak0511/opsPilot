@@ -127,7 +127,10 @@ def search_tickets_by_system_id(system_id: str) -> list[Ticket]:
         conn.close()
 
 # Mega Function to search tickets by multiple criteria. This will be useful in chats where a user has only rough idea of thier issue.
-def search_tickets(priority: Optional[str] = None, category: Optional[str] = None, employee_id: Optional[str] = None, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list[Ticket]:
+def search_tickets(title: Optional[str] = None, description: Optional[str] = None, 
+                   category: Optional[str] = None, employee_id: Optional[str] = None, 
+                   system_id: Optional[str] = None, assigned_to: Optional[str] = None,
+                   start_date: Optional[str] = None, end_date: Optional[str] = None) -> list[Ticket]:
     """Returns a list of Ticket objects based on multiple search criteria"""
     conn = get_connection()
     try:
@@ -135,15 +138,24 @@ def search_tickets(priority: Optional[str] = None, category: Optional[str] = Non
         query = "SELECT * FROM tickets WHERE 1=1"
         params = []
 
-        if priority:
-            query += " AND priority = ?"
-            params.append(priority)
+        if title:
+            query += " AND title LIKE ?"
+            params.append(f"%{title}%")
+        if description:
+            query += " AND description LIKE ?"
+            params.append(f"%{description}%")
         if category:
-            query += " AND category = ?"
-            params.append(category)
+            query += " AND category LIKE ?"
+            params.append(f"%{category}%")
         if employee_id:
             query += " AND employee_id = ?"
             params.append(employee_id)
+        if system_id:
+            query += " AND system_id = ?"
+            params.append(system_id)
+        if assigned_to:
+            query += " AND assigned_to = ?"
+            params.append(assigned_to)    
         if start_date and end_date:
             query += " AND created_date BETWEEN ? AND ?"
             params.extend([start_date, end_date])

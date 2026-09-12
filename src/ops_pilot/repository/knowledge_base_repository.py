@@ -110,3 +110,26 @@ def delete_knowledge_base(kb_id: str) -> None:
     finally:
         conn.close()
 
+def count_knowledge_base_articles(title: Optional[str] = None, category: Optional[str] = None,
+                                   incident_id: Optional[str] = None, tag: Optional[str] = None) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        query = "SELECT COUNT(*) FROM knowledge_base WHERE 1=1"
+        params = []
+        if title:
+            query += " AND LOWER(title) LIKE ?"
+            params.append(f"%{title.lower()}%")
+        if category:
+            query += " AND LOWER(category) LIKE ?"
+            params.append(f"%{category.lower()}%")
+        if incident_id:
+            query += " AND Incident_id = ?"
+            params.append(incident_id)
+        if tag:
+            query += " AND LOWER(tags) LIKE ?"
+            params.append(f"%{tag.lower()}%")
+        cursor.execute(query, tuple(params))
+        return cursor.fetchone()[0]
+    finally:
+        conn.close()
