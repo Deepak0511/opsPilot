@@ -6,7 +6,7 @@ import ops_pilot.repository.employee_repository as employee_repository
 
 
 @tool
-def search_employee(name: Optional[str] = None, email: Optional[str] = None,
+def search_employee_tool(name: Optional[str] = None, email: Optional[str] = None,
                     department: Optional[str] = None) -> list[Employee]:
     """Searches for employees by name, email, or department. At least name or email must be provided.
     Use this to resolve a person's identity before creating or assigning tickets.
@@ -35,7 +35,7 @@ def search_employee(name: Optional[str] = None, email: Optional[str] = None,
 
 
 @tool
-def count_employees_in_department(department: str) -> int:
+def count_employees_in_department_tool(department: str) -> int:
     """Returns the number of employees in a department.
     Call this BEFORE get_employees_by_department to check the result-set size.
     If the count exceeds 10, use pagination via offset/limit.
@@ -44,7 +44,7 @@ def count_employees_in_department(department: str) -> int:
 
 
 @tool
-def get_employees_by_department(department: str, offset: int = 0, limit: int = 10) -> list[Employee]:
+def get_employees_by_department_tool(department: str, offset: int = 0, limit: int = 10) -> list[Employee]:
     """Fetches employees belonging to a department with pagination.
     Always call count_employees_in_department first to know total size.
     Default page size is 10.

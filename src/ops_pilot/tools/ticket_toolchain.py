@@ -17,7 +17,7 @@ import ops_pilot.repository.system_repository as system_repository
 
 ##Scenario 1: User has Ticket-ID
 @tool
-def search_ticket_by_id(ticket_id: str) -> Ticket:
+def search_ticket_by_id_tool(ticket_id: str) -> Ticket:
     """Searches for a ticket by its ID."""
     ticket = ticket_repository.find_ticket_by_id(ticket_id)
     if not ticket:
@@ -25,7 +25,7 @@ def search_ticket_by_id(ticket_id: str) -> Ticket:
     return ticket
 
 @tool
-def search_tickets(employee_id: str, title: Optional[str] = None, description: Optional[str] = None,  
+def search_tickets_tool(employee_id: str, title: Optional[str] = None, description: Optional[str] = None,  
                    category: Optional[str] = None, system_id: Optional[str] = None, 
                    assigned_to: Optional[str] = None, created_date_str: Optional[str] = None) -> list[Ticket]:
     """Searches for tickets belonging to an employee, narrowing results through a waterfall of filters.
@@ -87,7 +87,7 @@ def search_tickets(employee_id: str, title: Optional[str] = None, description: O
 
 ## CRUD Operations for Tickets
 @tool
-def create_ticket(employee_id: str, title: str, description: str, 
+def create_ticket_tool(employee_id: str, title: str, description: str, 
                   status: str, priority: str, category: str, 
                   system_id: str, assigned_to: str, notes: str) -> Ticket:
     """Creates a new ticket in the system. This tool however is very strict as it requires System ID and Employee ID 
@@ -126,7 +126,7 @@ def create_ticket(employee_id: str, title: str, description: str,
 
 ## Update ticket - only status, priority, assigned_to and notes can be updated.
 @tool
-def update_ticket(ticket_id: str, status: Optional[str] = None, priority: Optional[str] = None,
+def update_ticket_tool(ticket_id: str, status: Optional[str] = None, priority: Optional[str] = None,
                     assigned_to: Optional[str] = None, notes: Optional[str] = None) -> Ticket:
         """Updates an existing ticket in the system. Only status, priority, assigned_to and notes can be updated."""
         ticket = ticket_repository.find_ticket_by_id(ticket_id)

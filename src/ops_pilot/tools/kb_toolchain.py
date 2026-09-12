@@ -6,7 +6,7 @@ import ops_pilot.repository.knowledge_base_repository as kb_repository
 
 
 @tool
-def count_knowledge_base_articles(title: Optional[str] = None, category: Optional[str] = None,
+def count_knowledge_base_articles_tool(title: Optional[str] = None, category: Optional[str] = None,
                                   incident_id: Optional[str] = None, tag: Optional[str] = None) -> int:
     """Returns the count of knowledge base articles matching the given filters.
     Call this BEFORE search_knowledge_base to gauge result-set size.
@@ -17,7 +17,7 @@ def count_knowledge_base_articles(title: Optional[str] = None, category: Optiona
 
 
 @tool
-def search_knowledge_base(title: Optional[str] = None, category: Optional[str] = None,
+def search_knowledge_base_tool(title: Optional[str] = None, category: Optional[str] = None,
                           incident_id: Optional[str] = None, tag: Optional[str] = None) -> list[KnowledgeBase]:
     """Searches knowledge base articles by optional title, category, related incident ID, or tag.
     At least one filter must be provided. Use count_knowledge_base_articles first to check result-set size.

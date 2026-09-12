@@ -6,7 +6,7 @@ import ops_pilot.repository.system_repository as system_repository
 
 
 @tool
-def count_systems(name: Optional[str] = None, status: Optional[str] = None) -> int:
+def count_systems_tool(name: Optional[str] = None, status: Optional[str] = None) -> int:
     """Returns the count of systems matching the given filters.
     Call this BEFORE search_systems to gauge result-set size.
     Helps the AI decide whether to refine filters or fetch directly.
@@ -15,7 +15,7 @@ def count_systems(name: Optional[str] = None, status: Optional[str] = None) -> i
 
 
 @tool
-def search_systems(name: Optional[str] = None, status: Optional[str] = None) -> list[System]:
+def search_systems_tool(name: Optional[str] = None, status: Optional[str] = None) -> list[System]:
     """Searches for IT systems by optional name and/or status.
     At least one parameter must be provided. The goal is to narrow down to a single system
     whose ID can then be used for ticket creation or lookup.
