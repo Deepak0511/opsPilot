@@ -10,6 +10,7 @@ from ops_pilot.tools.system_toolchain import count_systems_tool
 from ops_pilot.tools.system_toolchain import search_systems_tool
 from ops_pilot.tools.kb_toolchain import count_knowledge_base_articles_tool
 from ops_pilot.tools.kb_toolchain import search_knowledge_base_tool
+from ops_pilot.tools.employee_toolchain import search_employee_tool
 from ops_pilot.agent.state import AgentState, TriageDecision
 from langchain_core.messages import SystemMessage
 from typing import cast
@@ -47,8 +48,13 @@ def infra_node(state: AgentState) -> dict:
     return {"messages": [response], "current_branch": "infra_node"}
 
 
-# ── Ticket Reader: can ONLY search existing tickets ──
-ticket_read_tools = [search_ticket_by_id_tool, search_tickets_tool]
+# ── Ticket Reader: can search tickets and resolve lookup identifiers ──
+ticket_read_tools = [
+    search_ticket_by_id_tool,
+    search_tickets_tool,
+    search_employee_tool,
+    search_systems_tool,
+]
 ticket_read_llm = load_llm().bind_tools(ticket_read_tools)
 
 def ticket_read_node(state: AgentState) -> dict:
@@ -59,8 +65,13 @@ def ticket_read_node(state: AgentState) -> dict:
     return {"messages": [response], "current_branch": "ticket_read_node"}
 
 
-# ── Ticket Logger: can ONLY create/update tickets ──
-ticket_write_tools = [create_ticket_tool, update_ticket_tool]
+# ── Ticket Logger: can write tickets and resolve required identifiers ──
+ticket_write_tools = [
+    create_ticket_tool,
+    update_ticket_tool,
+    search_employee_tool,
+    search_systems_tool,
+]
 ticket_write_llm = load_llm().bind_tools(ticket_write_tools)
 
 def ticket_logger_node(state: AgentState) -> dict:
@@ -85,7 +96,13 @@ def triage_node(state: AgentState) -> dict:
     log.info(f"Triage routed to: {decision.next_node}")
     return {"next_node": decision.next_node}
 
-# Export all tools for the shared ToolNode
-all_tools = kb_tools + infra_tools + ticket_read_tools + ticket_write_tools
+# Export all tools for the shared ToolNode. Deduplicate by tool name because
+# LangChain tool objects themselves are unhashable.
+all_tools = []
+tool_names = set()
+for tool in kb_tools + infra_tools + ticket_read_tools + ticket_write_tools:
+    if tool.name not in tool_names:
+        all_tools.append(tool)
+        tool_names.add(tool.name)
 
 

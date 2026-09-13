@@ -41,6 +41,22 @@ def test_search_kb_by_title(db_connection, sample_kb):
     results = search_knowledge_base_by_title("vpn")
     assert len(results) == 0
 
+
+def test_search_kb_by_natural_language_terms(db_connection):
+    article = KnowledgeBase(
+        id="KB-002",
+        title="Guest WiFi Access",
+        category="Network",
+        content="Guests can connect to the office guest network.",
+        Incident_id=None,
+        tags=["wifi", "network"],
+    )
+    create_knowledge_base(article)
+
+    results = search_knowledge_base_by_title("How do I connect to wifi?")
+
+    assert [result.id for result in results] == ["KB-002"]
+
 def test_search_kb_by_category(db_connection, sample_kb):
     create_knowledge_base(sample_kb)
     

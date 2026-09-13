@@ -43,6 +43,8 @@ def search_knowledge_base_tool(title: Optional[str] = None, category: Optional[s
         results = [kb for kb in results if kb.Incident_id and kb.Incident_id == incident_id] if results else []
 
     if not results:
+        # ToolNode converts this into a message the LLM can understand.
+        # The KB agent can then ask a clarifying question instead of crashing.
         raise ValueError("No knowledge base articles found matching the provided criteria.")
 
     return results

@@ -50,6 +50,7 @@ class Settings:
         self.config["env_data_dir"] = os.getenv("DATA_DIR", "./data")
         #self.config["env_db_path"] = os.getenv("DB_PATH", f"{self.config['env_data_dir']}/ops_pilot.db")
         self.config["env_db_path"] = os.path.expandvars(os.environ["DB_PATH"])
+        self.config["env_checkpoint_db_path"] = os.path.expandvars(os.environ["CHECKPOINT_DB_PATH"])
         
         # Resolve log_dir relative to project root
         project_root = Path(__file__).parent.parent.parent.parent

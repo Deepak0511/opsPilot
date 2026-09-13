@@ -7,7 +7,8 @@ langchain-openai==1.6.2
 langchain-google-genai==4.4.0
 langchain-text-splitters==1.1.2
 langgraph==1.2.11
-
+# State and Conversation Persistence
+langgraph-checkpoint-sqlite==3.1.1
 # UI dependencies.
 streamlit==1.63.0
 

@@ -12,7 +12,8 @@ if str(SRC_DIR) not in sys.path:
 
 from langchain_core.messages import HumanMessage
 from ops_pilot.agent.graph import create_agent
-from ops_pilot.agent.state import AgentState
+
+CLI_THREAD_ID = "cli-session-001"
 
 def print_separator():
     print("-" * 60)
@@ -33,9 +34,8 @@ def main():
     print(" - 'Check status of ticket TKT001'")
     print(" - 'How do I connect to the office WiFi?'")
     print_separator()
-    
-    # We maintain our state across the session
-    state = AgentState()
+
+    config = {"configurable": {"thread_id": CLI_THREAD_ID}}
     
     while True:
         try:
@@ -46,12 +46,14 @@ def main():
             if not user_input.strip():
                 continue
                 
-            state.messages.append(HumanMessage(content=user_input))
-            
             print("\n[OpsPilot is thinking...]")
             
             # Stream the agent's execution step by step
-            for event in agent_app.stream(state, stream_mode="updates"):
+            for event in agent_app.stream(
+                {"messages": [HumanMessage(content=user_input)]},
+                config,
+                stream_mode="updates",
+            ):
                 for node_name, node_state in event.items():
                     print(f"  [Graph Trace] -> Node executed: '{node_name}'")
                     
@@ -66,11 +68,6 @@ def main():
                         # Print final agent answer
                         if getattr(last_msg, "content", None) and not getattr(last_msg, "tool_calls", None) and last_msg.type == "ai":
                             print(f"\nOpsPilot: {last_msg.content}")
-                        
-                        # Keep emitted messages for the next independent stream call.
-                        # The graph itself has no checkpointer, so it does not retain
-                        # this history between calls to stream().
-                        state.messages.extend(node_state["messages"])
                         
         except KeyboardInterrupt:
             print("\nGoodbye!")

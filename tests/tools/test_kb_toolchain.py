@@ -49,6 +49,6 @@ def test_search_knowledge_base_tool_multiple_filters(mocker, mock_kb):
     
 def test_search_knowledge_base_tool_not_found(mocker):
     mocker.patch("ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_title", return_value=[])
-    
+
     with pytest.raises(ValueError, match="No knowledge base articles found matching the provided criteria."):
         search_knowledge_base_tool.invoke({"title": "Unknown"})

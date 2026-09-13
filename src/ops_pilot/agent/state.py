@@ -12,6 +12,8 @@ class AgentState(BaseModel):
     messages: Annotated[list[BaseMessage], add_messages] = Field(default_factory=list)
     current_branch: Optional[str] = None
     next_node: Optional[str] = None
+    # Context only; tools still validate every identifier independently.
+    request_origin: Literal["human", "agent", "system"] = "human"
 
 
 

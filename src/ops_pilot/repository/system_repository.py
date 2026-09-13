@@ -1,5 +1,6 @@
 # Data access layer
 import sqlite3
+import re
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.system import System
@@ -27,14 +28,28 @@ def find_system_by_id(system_id: str) -> Optional[System]:
         conn.close()
 
 def search_systems_by_name(name: str) -> list[System]:
-    """Returns a list of System objects whose names contain the given substring (case-insensitive)"""
-    log.debug(f"Executing search_systems_by_name for name containing '{name}'")
+    """Searches system names and descriptions using meaningful query terms."""
+    log.debug(f"Executing search_systems_by_name for query '{name}'")
+    stop_words = {"a", "an", "do", "for", "how", "i", "is", "me", "my", "the", "to", "up"}
+    terms = [
+        term for term in re.findall(r"[a-z0-9]+", name.lower())
+        if term not in stop_words and len(term) > 1
+    ]
+    if not terms:
+        return []
+
     conn = get_connection()
     try:
         cursor = conn.cursor()
+        clauses = []
+        params = []
+        for term in terms:
+            pattern = f"%{term}%"
+            clauses.append("(LOWER(name) LIKE ? OR LOWER(description) LIKE ?)")
+            params.extend([pattern, pattern])
         cursor.execute(
-            "SELECT * FROM systems WHERE LOWER(name) LIKE ?",
-            (f"%{name.lower()}%",)
+            f"SELECT * FROM systems WHERE {' OR '.join(clauses)}",
+            tuple(params),
         )
         rows = cursor.fetchall()
         return [System.model_validate(dict(row)) for row in rows]

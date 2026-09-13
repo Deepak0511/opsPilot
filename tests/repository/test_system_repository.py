@@ -36,6 +36,14 @@ def test_search_systems_by_name(db_connection, sample_system):
     results = search_systems_by_name("Cache")
     assert len(results) == 0
 
+
+def test_search_systems_by_natural_language_terms(db_connection, sample_system):
+    create_system(sample_system)
+
+    results = search_systems_by_name("Is the PostgreSQL database up?")
+
+    assert [system.id for system in results] == ["SYS-001"]
+
 def test_search_systems_by_status(db_connection, sample_system):
     create_system(sample_system)
     

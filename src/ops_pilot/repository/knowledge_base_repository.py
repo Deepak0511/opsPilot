@@ -1,5 +1,6 @@
 # Data access layer
 import sqlite3
+import re
 from typing import Optional
 from ops_pilot.config.settings import lookup_for_setting
 from ops_pilot.models.knowledge_base import KnowledgeBase
@@ -34,14 +35,38 @@ def find_knowledge_base_by_id(kb_id: str) -> Optional[KnowledgeBase]:
 
 # Tries to find KB articles by title.
 def search_knowledge_base_by_title(title: str) -> list[KnowledgeBase]:
-    """Returns a list of KnowledgeBase objects whose titles contain the given substring (case-insensitive)"""
-    log.debug(f"Executing search_knowledge_base_by_title for title containing '{title}'")
+    """Searches article text using meaningful terms from the user's query."""
+    log.debug(f"Executing search_knowledge_base_by_title for query '{title}'")
+
+    # Users ask questions, not database queries. Remove common connector words
+    # so a request such as "How do I connect to wifi?" becomes "connect wifi".
+    stop_words = {"a", "an", "do", "for", "how", "i", "is", "me", "my", "the", "to"}
+    terms = [
+        term for term in re.findall(r"[a-z0-9]+", title.lower())
+        if term not in stop_words and len(term) > 1
+    ]
+
+    # No useful terms means there is nothing safe to search for.
+    if not terms:
+        return []
+
     conn = get_connection()
     try:
         cursor = conn.cursor()
+        # Search each meaningful term across the article's user-facing fields.
+        # OR lets "connect wifi" match an article titled "Guest WiFi Access".
+        clauses = []
+        params = []
+        for term in terms:
+            pattern = f"%{term}%"
+            clauses.append(
+                "(LOWER(title) LIKE ? OR LOWER(category) LIKE ? "
+                "OR LOWER(content) LIKE ? OR LOWER(tags) LIKE ?)"
+            )
+            params.extend([pattern, pattern, pattern, pattern])
         cursor.execute(
-            "SELECT * FROM knowledge_base WHERE LOWER(title) LIKE ?",
-            (f"%{title.lower()}%",)
+            f"SELECT * FROM knowledge_base WHERE {' OR '.join(clauses)}",
+            tuple(params),
         )
         rows = cursor.fetchall()
         return [_row_to_kb(row) for row in rows]

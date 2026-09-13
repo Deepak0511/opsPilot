@@ -1,4 +1,5 @@
 from ops_pilot.agent.state import AgentState
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from ops_pilot.utils.logger import log
@@ -8,16 +9,24 @@ from ops_pilot.agent.nodes import (
     all_tools,                          # combine all tool lists for the shared executor
 )
 from ops_pilot.agent.router import triage_router, route_after_agent, route_after_tools
-
+from ops_pilot.config.settings import lookup_for_setting
+import sqlite3
 # Shared tool executor — knows ALL tools, but each node's LLM
-# can only REQUEST its own subset. Think of it as a single 
-# DispatcherServlet that can route to any @Controller.
-tool_executor = ToolNode(all_tools)
+# can only REQUEST its own subset.
+# Tool errors become ToolMessages so the calling agent can recover and respond.
+tool_executor = ToolNode(all_tools, handle_tool_errors=True)
 
 def create_agent():
     log.info("Compiling StateGraph for ops_pilot agent")
     graph = StateGraph(AgentState)
 
+    ## Checkpointing setup.
+    log.info(f"Connecting to checkpoint database at {lookup_for_setting['env_checkpoint_db_path']}")
+    checkpoint_connection = sqlite3.connect(
+    lookup_for_setting["env_checkpoint_db_path"],
+    check_same_thread=False,
+    )
+    checkpoint_saver = SqliteSaver(checkpoint_connection)
     # ── Register nodes ──
     graph.add_node("triage", triage_node)
     graph.add_node("kb_node", kb_node)
@@ -50,4 +59,4 @@ def create_agent():
     # This creates the ReAct loop: Node -> Tools -> Node -> Tools -> Node -> END
     graph.add_conditional_edges("tools", route_after_tools)
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpoint_saver)
