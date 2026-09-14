@@ -37,10 +37,19 @@ def test_graph_visualization():
         pytest.fail(f"Could not draw mermaid graph: {e}")
 
 class MockTriageLLM:
+    def __init__(self):
+        self.call_count = 0
+
     def invoke(self, *args, **kwargs):
+        if self.call_count == 0:
+            self.call_count += 1
+            return TriageDecision(
+                next_node="kb_node",
+                routing_reason="The user is asking for VPN instructions.",
+            )
         return TriageDecision(
-            next_node="kb_node",
-            routing_reason="The user is asking for VPN instructions.",
+            next_node="FINISH",
+            routing_reason="Resolved.",
         )
 
 class MockKBLLM:

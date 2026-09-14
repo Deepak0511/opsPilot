@@ -11,11 +11,11 @@ from ops_pilot.tools.system_toolchain import search_systems_tool
 from ops_pilot.tools.kb_toolchain import count_knowledge_base_articles_tool
 from ops_pilot.tools.kb_toolchain import search_knowledge_base_tool
 from ops_pilot.tools.employee_toolchain import search_employee_tool
-from ops_pilot.agent.state import AgentState, TriageDecision
+from ops_pilot.agent.state import AgentState, SupervisorDecision
 from langchain_core.messages import SystemMessage
 from typing import cast
 from ops_pilot.prompts.system_prompt import (
-    TRIAGE_MANAGER_PROMPT,
+    SUPERVISOR_MANAGER_PROMPT,
     KNOWLEDGE_BASE_MANAGER_PROMPT,
     INFRASTRUCTURE_MANAGER_PROMPT,
     TICKET_READER_MANAGER_PROMPT,
@@ -33,7 +33,11 @@ def kb_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(KNOWLEDGE_BASE_MANAGER_PROMPT, state))
     response = kb_llm.invoke([sys_msg] + state.messages)   # This LLM can ONLY call KB tools
     log.debug(f"kb_node response: {response}")
-    return {"messages": [response], "current_branch": "kb_node"}
+    requires_input = False
+    if hasattr(response, "content") and isinstance(response.content, str) and "[REQUIRES_HUMAN_INPUT]" in response.content:
+        requires_input = True
+        response.content = response.content.replace("[REQUIRES_HUMAN_INPUT]", "").strip()
+    return {"messages": [response], "current_branch": "kb_node", "requires_human_input": requires_input}
 
 
 # ── Infra Node: can ONLY check system status ──
@@ -45,7 +49,11 @@ def infra_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(INFRASTRUCTURE_MANAGER_PROMPT, state))
     response = infra_llm.invoke([sys_msg] + state.messages)  # Can ONLY check systems
     log.debug(f"infra_node response: {response}")
-    return {"messages": [response], "current_branch": "infra_node"}
+    requires_input = False
+    if hasattr(response, "content") and isinstance(response.content, str) and "[REQUIRES_HUMAN_INPUT]" in response.content:
+        requires_input = True
+        response.content = response.content.replace("[REQUIRES_HUMAN_INPUT]", "").strip()
+    return {"messages": [response], "current_branch": "infra_node", "requires_human_input": requires_input}
 
 
 # ── Ticket Reader: can search tickets and resolve lookup identifiers ──
@@ -62,7 +70,11 @@ def ticket_read_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_READER_MANAGER_PROMPT, state))
     response = ticket_read_llm.invoke([sys_msg] + state.messages)  # Can ONLY read, never create
     log.debug(f"ticket_read_node response: {response}")
-    return {"messages": [response], "current_branch": "ticket_read_node"}
+    requires_input = False
+    if hasattr(response, "content") and isinstance(response.content, str) and "[REQUIRES_HUMAN_INPUT]" in response.content:
+        requires_input = True
+        response.content = response.content.replace("[REQUIRES_HUMAN_INPUT]", "").strip()
+    return {"messages": [response], "current_branch": "ticket_read_node", "requires_human_input": requires_input}
 
 
 # ── Ticket Logger: can write tickets and resolve required identifiers ──
@@ -79,11 +91,15 @@ def ticket_logger_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_LOGGER_MANAGER_PROMPT, state))
     response = ticket_write_llm.invoke([sys_msg] + state.messages)  # Can ONLY write tickets
     log.debug(f"ticket_logger_node response: {response}")
-    return {"messages": [response], "current_branch": "ticket_logger_node"}
+    requires_input = False
+    if hasattr(response, "content") and isinstance(response.content, str) and "[REQUIRES_HUMAN_INPUT]" in response.content:
+        requires_input = True
+        response.content = response.content.replace("[REQUIRES_HUMAN_INPUT]", "").strip()
+    return {"messages": [response], "current_branch": "ticket_logger_node", "requires_human_input": requires_input}
 
 
-triage_llm = load_llm()  # No tools bound — it can only think and respond
-structured_triage_llm = triage_llm.with_structured_output(TriageDecision)
+supervisor_llm = load_llm()  # No tools bound — it can only think and respond
+structured_supervisor_llm = supervisor_llm.with_structured_output(SupervisorDecision)
 
 def _prompt_with_routing_context(prompt: str, state: AgentState) -> str:
     if not state.routing_reason:
@@ -94,18 +110,19 @@ def _prompt_with_routing_context(prompt: str, state: AgentState) -> str:
         f"{state.routing_reason}"
     )
 
-def triage_node(state: AgentState) -> dict:
+def supervisor_node(state: AgentState) -> dict:
     """Classifies the user's intent. No tools — just reasoning."""
-    log.info("Agent entered node: triage_node")
-    sys_msg = SystemMessage(content=TRIAGE_MANAGER_PROMPT)
+    log.info("Agent entered node: supervisor_node")
+    sys_msg = SystemMessage(content=SUPERVISOR_MANAGER_PROMPT)
     decision = cast(
-        TriageDecision,
-        structured_triage_llm.invoke([sys_msg] + state.messages),
+        SupervisorDecision,
+        structured_supervisor_llm.invoke([sys_msg] + state.messages),
     )
-    log.info(f"Triage routed to: {decision.next_node}; reason: {decision.routing_reason}")
+    log.info(f"Supervisor routed to: {decision.next_node}; reason: {decision.routing_reason}")
     return {
         "next_node": decision.next_node,
         "routing_reason": decision.routing_reason,
+        "requires_human_input": False, # Reset input wait state when resuming
     }
 
 # Export all tools for the shared ToolNode. Deduplicate by tool name because

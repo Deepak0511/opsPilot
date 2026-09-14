@@ -15,16 +15,18 @@ class AgentState(BaseModel):
     routing_reason: Optional[str] = None
     # Context only; tools still validate every identifier independently.
     request_origin: Literal["human", "agent", "system"] = "human"
+    requires_human_input: bool = False
 
 
 
 
-class TriageDecision(BaseModel):
+class SupervisorDecision(BaseModel):
     next_node: Literal[
         "kb_node",
         "infra_node",
         "ticket_read_node",
         "ticket_logger_node",
+        "FINISH",
     ]
     routing_reason: str = Field(
         description="Brief explanation for why this node was selected."

@@ -110,7 +110,10 @@ if prompt := st.chat_input("How can I help you?"):
 											message, "status", "success"
 										)
 							if message.type == "ai" and message.content:
-								response = message.content
+								if response:
+									response += "\n\n---\n\n" + message.content
+								else:
+									response = message.content
 				status.update(label="Complete", state="complete")
 
 			if tool_executions:

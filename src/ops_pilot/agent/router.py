@@ -2,13 +2,18 @@ from ops_pilot.agent.state import AgentState
 from ops_pilot.utils.logger import log
 
 def route_after_agent(state: AgentState) -> str:
-    """Check if the LLM requested a tool call. If so, route to 'tools', else 'done'."""
+    """Check if the LLM requested a tool call or needs to pause for human input."""
+    if state.requires_human_input:
+        log.info("Agent requires human input; routing to __end__")
+        return "__end__"
+        
     last_message = state.messages[-1]
     if hasattr(last_message, "tool_calls") and last_message.tool_calls:
         log.info("Agent requested tools; routing to 'tools'")
         return "tools"
-    log.info("Agent finished; routing to 'done'")
-    return "done"
+    
+    log.info("Agent finished; routing back to supervisor")
+    return "supervisor"
 
 
 def route_after_tools(state: AgentState) -> str:
@@ -16,11 +21,13 @@ def route_after_tools(state: AgentState) -> str:
     return state.current_branch
 
 
-# Router: reads the triage result and routes deterministically
-def triage_router(state: AgentState) -> str:
-    """Routes to the correct specialized node based on triage structured output."""
+def supervisor_router(state: AgentState) -> str:
+    """Routes to the correct specialized node based on supervisor structured output."""
     if state.next_node:
-        log.info(f"Triage routed to next_node: {state.next_node}")
+        if state.next_node == "FINISH":
+            log.info("Supervisor routed to FINISH")
+            return "__end__"
+        log.info(f"Supervisor routed to next_node: {state.next_node}")
         return state.next_node
-    log.warning("Triage did not provide next_node; defaulting to kb_node")
+    log.warning("Supervisor did not provide next_node; defaulting to kb_node")
     return "kb_node"  # Safe fallback
