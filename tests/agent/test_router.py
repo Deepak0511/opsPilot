@@ -27,4 +27,4 @@ def test_triage_router():
     
 def test_triage_router_fallback():
     state = AgentState()
-    assert triage_router(state) == "kb_node"
+    assert triage_router(state) == "infra_node"

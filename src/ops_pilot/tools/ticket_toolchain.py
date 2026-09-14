@@ -106,22 +106,27 @@ def search_tickets_tool(employee_id: str, title: Optional[str] = None, descripti
 @tool
 @handle_tool_errors
 def create_ticket_tool(employee_id: str, title: str, description: str, 
-                  status: str, priority: str, category: str, 
-                  assigned_to: str, notes: str, ticket_type: str, system_id: Optional[str] = None) -> Ticket:
+                  status: str, category: str, ticket_type: str,
+                  priority: Optional[str] = None, assigned_to: Optional[str] = None,
+                  notes: Optional[str] = None, system_id: Optional[str] = None) -> Ticket:
     """Creates a new ticket in the system. This tool however is very strict as it requires System ID and Employee ID 
         beforehand. To keep things modular, Employee ID and System ID lookup can be done using their respective tools
         and repositories.
+
+        Priority and assignment are optional. If omitted, priority is inferred from
+        the issue severity and the first employee in the IT department is assigned.
     """
     log.info(f"Tool invoked: create_ticket_tool(employee_id={employee_id}, title={title}, system_id={system_id})")
     # Validate fields
     employee_id = validators.validate_id_format(employee_id, "employee_id")
-    assigned_to = validators.validate_id_format(assigned_to, "assigned_to")
     title = validators.validate_not_empty(title, "title")
     description = validators.validate_not_empty(description, "description")
     category = validators.validate_not_empty(category, "category")
     status = validators.validate_status(status)
-    priority = validators.validate_priority(priority)
     ticket_type = validators.validate_ticket_type(ticket_type)
+    priority = validators.validate_priority(priority or infer_priority(title, description, category))
+    assigned_to = assigned_to or get_default_assignee()
+    assigned_to = validators.validate_id_format(assigned_to, "assigned_to")
 
     if not system_id or system_id.lower() in ("none", "null", ""):
         # Infer fallback
@@ -174,6 +179,26 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
     created_ticket = ticket_repository.create_ticket(ticket)
     audit_log.info(f"Ticket {created_ticket.id} created by employee {employee_id} for system {system_id}")
     return created_ticket
+
+
+def infer_priority(title: str, description: str, category: str) -> str:
+    """Apply the default severity matrix when the user does not specify priority."""
+    text = f"{title} {description} {category}".lower()
+    if any(term in text for term in ("security breach", "data loss", "ransomware", "all users", "outage")):
+        return "Critical"
+    if any(term in text for term in ("cannot work", "can't work", "unable to work", "blocked", "down", "unavailable")):
+        return "High"
+    if any(term in text for term in ("question", "how do i", "request", "access")):
+        return "Low"
+    return "Medium"
+
+
+def get_default_assignee() -> str:
+    """Assign new tickets to the first available employee in the IT department."""
+    employees = employee_repository.find_employees_by_department("IT", offset=0, limit=1)
+    if not employees:
+        raise ValueError("No employees are available in the IT department for ticket assignment.")
+    return employees[0].id
 
 ## Update ticket - only status, priority, assigned_to and notes can be updated.
 @tool

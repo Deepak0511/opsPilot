@@ -23,6 +23,7 @@ from ops_pilot.prompts.system_prompt import (
 )
 from ops_pilot.utils.large_language_models import load_llm
 from ops_pilot.utils.logger import log
+import re
 
 # ── KB Node: can ONLY search knowledge base ──
 kb_tools = [search_knowledge_base_tool, count_knowledge_base_articles_tool]
@@ -98,15 +99,40 @@ def triage_node(state: AgentState) -> dict:
     """Classifies the user's intent. No tools — just reasoning."""
     log.info("Agent entered node: triage_node")
     sys_msg = SystemMessage(content=TRIAGE_MANAGER_PROMPT)
+    user_request = _latest_human_request(state)
     decision = cast(
         TriageDecision,
         structured_triage_llm.invoke([sys_msg] + state.messages),
     )
+    if decision.next_node == "ticket_logger_node" and _is_guidance_request(user_request):
+        decision = decision.model_copy(
+            update={
+                "next_node": "infra_node",
+                "routing_reason": "The user is asking for procedural guidance, so gather system context before the KB step.",
+            }
+        )
     log.info(f"Triage routed to: {decision.next_node}; reason: {decision.routing_reason}")
     return {
         "next_node": decision.next_node,
         "routing_reason": decision.routing_reason,
     }
+
+
+def _latest_human_request(state: AgentState) -> str:
+    for message in reversed(state.messages):
+        if message.type == "human":
+            return str(message.content)
+    return ""
+
+
+def _is_guidance_request(request: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:how\s+(?:do|can)|what\s+are\s+the\s+steps|can\s+you\s+explain)\b",
+            request,
+            flags=re.IGNORECASE,
+        )
+    )
 
 # Export all tools for the shared ToolNode. Deduplicate by tool name because
 # LangChain tool objects themselves are unhashable.

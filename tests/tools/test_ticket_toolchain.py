@@ -129,6 +129,31 @@ def test_create_ticket_tool_fallback_system(mocker, mock_ticket):
     args, kwargs = mock_create.call_args
     assert args[0].system_id == "SYS-HW"
 
+
+def test_create_ticket_tool_defaults_priority_and_assignee(mocker, mock_ticket):
+    mocker.patch("ops_pilot.tools.ticket_toolchain.employee_repository.find_employee_by_id", return_value=Employee(id="E001", name="Test", email="test@test", department="IT"))
+    mocker.patch("ops_pilot.tools.ticket_toolchain.employee_repository.find_employees_by_department", return_value=[Employee(id="IT001", name="IT Support", email="it@test", department="IT")])
+    mocker.patch("ops_pilot.tools.ticket_toolchain.system_repository.find_system_by_id", return_value=System(id="SYS-001", name="Test System", status="Online"))
+    mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.get_connection")
+    mocker.patch("ops_pilot.tools.ticket_toolchain.generate_ticket_id", return_value="INC-001")
+    mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.search_tickets", return_value=[])
+    mock_create = mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.create_ticket", return_value=mock_ticket)
+
+    result = create_ticket_tool.invoke({
+        "employee_id": "E001",
+        "title": "Laptop unavailable",
+        "description": "I cannot work because the laptop is down",
+        "status": "Open",
+        "category": "Hardware",
+        "ticket_type": "INC",
+        "system_id": "SYS-001",
+    })
+
+    assert result.id == "INC-001"
+    created_ticket = mock_create.call_args.args[0]
+    assert created_ticket.priority == "High"
+    assert created_ticket.assigned_to == "IT001"
+
 def test_update_ticket_tool(mocker, mock_ticket):
     mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.find_ticket_by_id", return_value=mock_ticket)
     mock_update = mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.update_ticket")

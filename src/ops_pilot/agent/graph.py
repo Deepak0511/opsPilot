@@ -51,8 +51,14 @@ def create_agent():
     for node_name in ["kb_node", "infra_node", "ticket_read_node", "ticket_logger_node"]:
         graph.add_conditional_edges(
             node_name, 
-            route_after_agent, 
-            {"tools": "tools", "done": END}
+            route_after_agent,
+            {
+                "tools": "tools",
+                "kb_node": "kb_node",
+                "ticket_read_node": "ticket_read_node",
+                "ticket_logger_node": "ticket_logger_node",
+                "done": END,
+            }
         )
 
     # ── After tools execute, go back to the node that called them ──

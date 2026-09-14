@@ -84,7 +84,7 @@ if prompt := st.chat_input("How can I help you?"):
 	with st.chat_message("assistant"):
 		try:
 			with st.status("Working...", expanded=False) as status:
-				response = None
+				responses = []
 				for event in get_agent().stream(
 					AgentState(messages=[HumanMessage(content=prompt)]),
 					config,
@@ -110,7 +110,8 @@ if prompt := st.chat_input("How can I help you?"):
 											message, "status", "success"
 										)
 							if message.type == "ai" and message.content:
-								response = message.content
+								if message.content not in responses:
+									responses.append(message.content)
 				status.update(label="Complete", state="complete")
 
 			if tool_executions:
@@ -127,6 +128,7 @@ if prompt := st.chat_input("How can I help you?"):
 							else:
 								st.write(output)
 
+			response = "\n\n".join(responses)
 			if not response:
 				response = "I could not generate a response. Please try again."
 			st.markdown(response)

@@ -1,6 +1,7 @@
 import pytest
 from ops_pilot.agent.state import AgentState, TriageDecision
 from langchain_core.messages import HumanMessage, AIMessage
+from ops_pilot.prompts.system_prompt import TRIAGE_MANAGER_PROMPT, TICKET_LOGGER_MANAGER_PROMPT
 
 def test_triage_node(mocker):
     # We need to mock structured_triage_llm
@@ -21,6 +22,36 @@ def test_triage_node(mocker):
         "routing_reason": "The user is asking for password reset instructions.",
     }
     mock_llm.invoke.assert_called_once()
+
+
+def test_triage_node_keeps_how_to_request_out_of_ticket_logger(mocker):
+    mock_llm = mocker.patch("ops_pilot.agent.nodes.structured_triage_llm")
+    mock_llm.invoke.return_value = TriageDecision(
+        next_node="ticket_logger_node",
+        routing_reason="The user needs a reimbursement ticket.",
+    )
+
+    from ops_pilot.agent.nodes import triage_node
+
+    result = triage_node(
+        AgentState(
+            messages=[
+                HumanMessage(
+                    content="How can I raise a reimbursement request for my internet bill?"
+                )
+            ]
+        )
+    )
+
+    assert result["next_node"] == "infra_node"
+    assert "procedural guidance" in result["routing_reason"]
+
+
+def test_triage_prompt_distinguishes_guidance_from_ticket_action():
+    assert "How can I" in TRIAGE_MANAGER_PROMPT
+    assert "never directly to 'ticket_logger_node'" in TRIAGE_MANAGER_PROMPT
+    assert "Create a reimbursement ticket" in TRIAGE_MANAGER_PROMPT
+    assert "Do not use it to answer" in TICKET_LOGGER_MANAGER_PROMPT
 
 def test_kb_node(mocker):
     mock_msg = AIMessage(content="Here is a KB article")

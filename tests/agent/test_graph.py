@@ -1,7 +1,41 @@
 import pytest
 from ops_pilot.agent.graph import create_agent
-from ops_pilot.agent.state import TriageDecision
+from ops_pilot.agent.router import triage_router
+from ops_pilot.agent.router import route_after_agent
+from ops_pilot.agent.state import TriageDecision, AgentState
 from langchain_core.messages import HumanMessage, AIMessage, ToolCall
+
+
+def test_triage_router_defaults_to_infra_node():
+    state = AgentState(messages=[HumanMessage(content="Need help with a system issue")])
+    assert triage_router(state) == "infra_node"
+
+
+def test_triage_router_forces_kb_through_infra_node():
+    state = AgentState(
+        messages=[HumanMessage(content="How do I raise a reimbursement request?")],
+        next_node="kb_node",
+    )
+    assert triage_router(state) == "infra_node"
+
+
+def test_infra_node_continues_to_kb_after_context_is_gathered():
+    state = AgentState(
+        messages=[AIMessage(content="System context gathered")],
+        current_branch="infra_node",
+        next_node="kb_node",
+    )
+    assert route_after_agent(state) == "kb_node"
+
+
+def test_infra_node_continues_to_ticket_logger_when_selected():
+    state = AgentState(
+        messages=[AIMessage(content="System context gathered")],
+        current_branch="infra_node",
+        next_node="ticket_logger_node",
+    )
+    assert route_after_agent(state) == "ticket_logger_node"
+
 
 def test_create_agent():
     # Calling create_agent compiles the graph.
@@ -66,7 +100,14 @@ def test_graph_end_to_end_tool_call(mocker):
     # Mock the tool's underlying repo so we don't hit the DB or fail validation
     mocker.patch(
         "ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_keyword",
-        return_value=[KnowledgeBase(id="KB-001", title="VPN Setup", category="Network", content="Mocked KB Response", tags=[])]
+        return_value=[KnowledgeBase.model_validate({
+            "id": "KB-001",
+            "title": "VPN Setup",
+            "category": "Network",
+            "content": "Mocked KB Response",
+            "Incident_id": None,
+            "tags": [],
+        })]
     )
     
     # Re-import create_agent if needed, or just call it since nodes are patched.
@@ -75,7 +116,7 @@ def test_graph_end_to_end_tool_call(mocker):
     app = create_agent()
     
     # Invoke the graph
-    initial_state = {"messages": [HumanMessage(content="How do I connect to VPN?")]}
+    initial_state = AgentState(messages=[HumanMessage(content="How do I connect to VPN?")])
     
     # We can step through or just run it. We will run it completely.
     # The graph will:
