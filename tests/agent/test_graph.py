@@ -65,7 +65,7 @@ def test_graph_end_to_end_tool_call(mocker):
     from ops_pilot.models.knowledge_base import KnowledgeBase
     # Mock the tool's underlying repo so we don't hit the DB or fail validation
     mocker.patch(
-        "ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_title", 
+        "ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_keyword",
         return_value=[KnowledgeBase(id="KB-001", title="VPN Setup", category="Network", content="Mocked KB Response", tags=[])]
     )
     

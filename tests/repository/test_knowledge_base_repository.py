@@ -2,7 +2,7 @@ import pytest
 from ops_pilot.repository.knowledge_base_repository import (
     create_knowledge_base,
     find_knowledge_base_by_id,
-    search_knowledge_base_by_title,
+    search_knowledge_base_by_keyword,
     search_knowledge_base_by_category,
     search_knowledge_base_by_tag,
     update_knowledge_base,
@@ -31,29 +31,29 @@ def test_create_and_find_kb_by_id(db_connection, sample_kb):
     # Note: Pydantic parses the comma separated string "password,reset,auth" into a list if properly configured,
     # or the model validate handles it. We'll just verify the title for now.
     
-def test_search_kb_by_title(db_connection, sample_kb):
+def test_search_knowledge_base_by_keyword(db_connection, sample_kb):
     create_knowledge_base(sample_kb)
     
-    results = search_knowledge_base_by_title("reset password")
+    results = search_knowledge_base_by_keyword("reset password")
     assert len(results) == 1
     assert results[0].id == sample_kb.id
     
-    results = search_knowledge_base_by_title("vpn")
+    results = search_knowledge_base_by_keyword("vpn")
     assert len(results) == 0
 
 
-def test_search_kb_by_natural_language_terms(db_connection):
+def test_search_knowledge_base_by_natural_language_terms(db_connection):
     article = KnowledgeBase(
         id="KB-002",
         title="Guest WiFi Access",
         category="Network",
-        content="Guests can connect to the office guest network.",
+        content="Use the network corp-guest to connect.",
         Incident_id=None,
-        tags=["wifi", "network"],
+        tags=["wifi", "guest"]
     )
     create_knowledge_base(article)
 
-    results = search_knowledge_base_by_title("How do I connect to wifi?")
+    results = search_knowledge_base_by_keyword("How do I connect to wifi?")
 
     assert [result.id for result in results] == ["KB-002"]
 
@@ -91,8 +91,8 @@ def test_delete_kb(db_connection, sample_kb):
 
 def test_count_kb_articles(db_connection, sample_kb):
     create_knowledge_base(sample_kb)
-    
+
     assert count_knowledge_base_articles() == 1
-    assert count_knowledge_base_articles(title="reset") == 1
-    assert count_knowledge_base_articles(category="auth") == 1
+    assert count_knowledge_base_articles(keyword="reset") == 1
+    assert count_knowledge_base_articles(category="Auth") == 1
     assert count_knowledge_base_articles(category="network") == 0

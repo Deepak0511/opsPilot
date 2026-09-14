@@ -27,12 +27,12 @@ def find_system_by_id(system_id: str) -> Optional[System]:
     finally:
         conn.close()
 
-def search_systems_by_name(name: str) -> list[System]:
+def search_systems_by_keyword(keyword: str) -> list[System]:
     """Searches system names and descriptions using meaningful query terms."""
-    log.debug(f"Executing search_systems_by_name for query '{name}'")
+    log.debug(f"Executing search_systems_by_keyword for query '{keyword}'")
     stop_words = {"a", "an", "do", "for", "how", "i", "is", "me", "my", "the", "to", "up"}
     terms = [
-        term for term in re.findall(r"[a-z0-9]+", name.lower())
+        term for term in re.findall(r"[a-z0-9]+", keyword.lower())
         if term not in stop_words and len(term) > 1
     ]
     if not terms:
@@ -41,16 +41,13 @@ def search_systems_by_name(name: str) -> list[System]:
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        clauses = []
+        query = "SELECT * FROM systems WHERE 1=1"
         params = []
         for term in terms:
-            pattern = f"%{term}%"
-            clauses.append("(LOWER(name) LIKE ? OR LOWER(description) LIKE ?)")
-            params.extend([pattern, pattern])
-        cursor.execute(
-            f"SELECT * FROM systems WHERE {' OR '.join(clauses)}",
-            tuple(params),
-        )
+            query += " AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?)"
+            params.extend([f"%{term}%", f"%{term}%"])
+            
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
         return [System.model_validate(dict(row)) for row in rows]
     finally:
@@ -112,15 +109,24 @@ def delete_system(system_id: str) -> None:
     finally:
         conn.close()
 
-def count_systems(name: Optional[str] = None, status: Optional[str] = None) -> int:
+def count_systems(keyword: Optional[str] = None, status: Optional[str] = None) -> int:
     conn = get_connection()
     try:
         cursor = conn.cursor()
         query = "SELECT COUNT(*) FROM systems WHERE 1=1"
         params = []
-        if name:
-            query += " AND LOWER(name) LIKE ?"
-            params.append(f"%{name.lower()}%")
+        if keyword:
+            stop_words = {"a", "an", "do", "for", "how", "i", "is", "me", "my", "the", "to", "up"}
+            terms = [
+                term for term in re.findall(r"[a-z0-9]+", keyword.lower())
+                if term not in stop_words and len(term) > 1
+            ]
+            # If a keyword is provided but no valid terms remain, it will match 0 systems
+            if not terms:
+                return 0
+            for term in terms:
+                query += " AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?)"
+                params.extend([f"%{term}%", f"%{term}%"])
         if status:
             query += " AND LOWER(status) LIKE ?"
             params.append(f"%{status.lower()}%")

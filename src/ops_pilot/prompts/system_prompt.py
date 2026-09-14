@@ -17,7 +17,7 @@ User reports issue
     → Not found? → Determine affected system
       → Infrastructure? → Check status,
             → Down → file ticket INC
-            → Up → Possibly End user side problem. Jump out. 
+            → Up → Possibly End user side problem. Raise a ticket. 
       → End-user device? → Try KB resolution
         → Resolved? → Done
         → Not resolved? → File ticket (Use your judgement to file 'INC-%'(Stands for Incident) for physical damage , theft, hacking etc. Otherwise 'ITR-%'(Stands for IT Request) for upgrades, password reset etc.)

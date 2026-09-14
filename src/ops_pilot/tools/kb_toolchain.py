@@ -10,15 +10,16 @@ from ops_pilot.utils import validators
 
 @tool
 @handle_tool_errors
-def count_knowledge_base_articles_tool(title: Optional[str] = None, category: Optional[str] = None,
+def count_knowledge_base_articles_tool(keyword: Optional[str] = None, category: Optional[str] = None,
                                   incident_id: Optional[str] = None, tag: Optional[str] = None) -> int:
     """Returns the count of knowledge base articles matching the given filters.
+    Pass query concepts (e.g., 'reimbursement', 'internet bill') into the 'keyword' argument to search titles, content, and tags.
     Call this BEFORE search_knowledge_base to gauge result-set size.
     If the count is large, consider narrowing filters before fetching.
     """
-    log.info(f"Tool invoked: count_knowledge_base_articles_tool(title={title}, category={category}, incident={incident_id}, tag={tag})")
-    if title:
-        title = validators.validate_not_empty(title, "title")
+    log.info(f"Tool invoked: count_knowledge_base_articles_tool(keyword={keyword}, category={category}, incident={incident_id}, tag={tag})")
+    if keyword:
+        keyword = validators.validate_not_empty(keyword, "keyword")
     if category:
         category = validators.validate_not_empty(category, "category")
     if incident_id:
@@ -26,21 +27,22 @@ def count_knowledge_base_articles_tool(title: Optional[str] = None, category: Op
     if tag:
         tag = validators.validate_not_empty(tag, "tag")
 
-    return kb_repository.count_knowledge_base_articles(title=title, category=category,
+    return kb_repository.count_knowledge_base_articles(keyword=keyword, category=category,
                                                        incident_id=incident_id, tag=tag)
 
 
 @tool
 @handle_tool_errors
-def search_knowledge_base_tool(title: Optional[str] = None, category: Optional[str] = None,
+def search_knowledge_base_tool(keyword: Optional[str] = None, category: Optional[str] = None,
                           incident_id: Optional[str] = None, tag: Optional[str] = None) -> list[KnowledgeBase]:
-    """Searches knowledge base articles by optional title, category, related incident ID, or tag.
+    """Searches knowledge base articles by optional keyword, category, related incident ID, or tag.
+    Pass query concepts (e.g., 'reimbursement', 'internet bill') into the 'keyword' argument to search titles, content, and tags.
     At least one filter must be provided. Use count_knowledge_base_articles first to check result-set size.
     Returns matching KB articles that can help resolve recurring or known issues.
     """
-    log.info(f"Tool invoked: search_knowledge_base_tool(title={title}, category={category}, incident={incident_id}, tag={tag})")
-    if title:
-        title = validators.validate_not_empty(title, "title")
+    log.info(f"Tool invoked: search_knowledge_base_tool(keyword={keyword}, category={category}, incident={incident_id}, tag={tag})")
+    if keyword:
+        keyword = validators.validate_not_empty(keyword, "keyword")
     if category:
         category = validators.validate_not_empty(category, "category")
     if incident_id:
@@ -48,13 +50,13 @@ def search_knowledge_base_tool(title: Optional[str] = None, category: Optional[s
     if tag:
         tag = validators.validate_not_empty(tag, "tag")
 
-    if not any([title, category, incident_id, tag]):
+    if not any([keyword, category, incident_id, tag]):
         raise ValueError("At least one search parameter must be provided.")
 
     results: list[KnowledgeBase] = []
 
-    if title:
-        results = kb_repository.search_knowledge_base_by_title(title)
+    if keyword:
+        results = kb_repository.search_knowledge_base_by_keyword(keyword)
     if category:
         cat_results = kb_repository.search_knowledge_base_by_category(category)
         results = _intersect(results, cat_results) if results else cat_results
