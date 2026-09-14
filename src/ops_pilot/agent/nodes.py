@@ -30,7 +30,7 @@ kb_llm = load_llm().bind_tools(kb_tools)
 
 def kb_node(state: AgentState) -> dict:
     log.info("Agent entered node: kb_node")
-    sys_msg = SystemMessage(content=KNOWLEDGE_BASE_MANAGER_PROMPT)
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(KNOWLEDGE_BASE_MANAGER_PROMPT, state))
     response = kb_llm.invoke([sys_msg] + state.messages)   # This LLM can ONLY call KB tools
     log.debug(f"kb_node response: {response}")
     return {"messages": [response], "current_branch": "kb_node"}
@@ -42,7 +42,7 @@ infra_llm = load_llm().bind_tools(infra_tools)
 
 def infra_node(state: AgentState) -> dict:
     log.info("Agent entered node: infra_node")
-    sys_msg = SystemMessage(content=INFRASTRUCTURE_MANAGER_PROMPT)
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(INFRASTRUCTURE_MANAGER_PROMPT, state))
     response = infra_llm.invoke([sys_msg] + state.messages)  # Can ONLY check systems
     log.debug(f"infra_node response: {response}")
     return {"messages": [response], "current_branch": "infra_node"}
@@ -59,7 +59,7 @@ ticket_read_llm = load_llm().bind_tools(ticket_read_tools)
 
 def ticket_read_node(state: AgentState) -> dict:
     log.info("Agent entered node: ticket_read_node")
-    sys_msg = SystemMessage(content=TICKET_READER_MANAGER_PROMPT)
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_READER_MANAGER_PROMPT, state))
     response = ticket_read_llm.invoke([sys_msg] + state.messages)  # Can ONLY read, never create
     log.debug(f"ticket_read_node response: {response}")
     return {"messages": [response], "current_branch": "ticket_read_node"}
@@ -76,7 +76,7 @@ ticket_write_llm = load_llm().bind_tools(ticket_write_tools)
 
 def ticket_logger_node(state: AgentState) -> dict:
     log.info("Agent entered node: ticket_logger_node")
-    sys_msg = SystemMessage(content=TICKET_LOGGER_MANAGER_PROMPT)
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_LOGGER_MANAGER_PROMPT, state))
     response = ticket_write_llm.invoke([sys_msg] + state.messages)  # Can ONLY write tickets
     log.debug(f"ticket_logger_node response: {response}")
     return {"messages": [response], "current_branch": "ticket_logger_node"}
@@ -84,6 +84,15 @@ def ticket_logger_node(state: AgentState) -> dict:
 
 triage_llm = load_llm()  # No tools bound — it can only think and respond
 structured_triage_llm = triage_llm.with_structured_output(TriageDecision)
+
+def _prompt_with_routing_context(prompt: str, state: AgentState) -> str:
+    if not state.routing_reason:
+        return prompt
+    return (
+        f"{prompt}\n\n"
+        "Internal triage context (do not quote directly to the user):\n"
+        f"{state.routing_reason}"
+    )
 
 def triage_node(state: AgentState) -> dict:
     """Classifies the user's intent. No tools — just reasoning."""
@@ -93,8 +102,11 @@ def triage_node(state: AgentState) -> dict:
         TriageDecision,
         structured_triage_llm.invoke([sys_msg] + state.messages),
     )
-    log.info(f"Triage routed to: {decision.next_node}")
-    return {"next_node": decision.next_node}
+    log.info(f"Triage routed to: {decision.next_node}; reason: {decision.routing_reason}")
+    return {
+        "next_node": decision.next_node,
+        "routing_reason": decision.routing_reason,
+    }
 
 # Export all tools for the shared ToolNode. Deduplicate by tool name because
 # LangChain tool objects themselves are unhashable.

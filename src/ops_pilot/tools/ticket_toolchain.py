@@ -42,9 +42,9 @@ def search_tickets_tool(employee_id: str, title: Optional[str] = None, descripti
     remains, loose filters are applied one-by-one to try narrowing further:
 
       Strict + Medium (DB query — applied together, skipped when absent):
-        - employee_id  (required) — resolved ID. Use search_employee beforehand.
-        - system_id    (strict)   — resolved ID. Use search_systems beforehand.
-        - assigned_to  (strict)   — resolved employee ID of the IT person. Use search_employee beforehand.
+        - employee_id  (required) — resolved ID. Use search_employee_tool beforehand.
+        - system_id    (strict)   — resolved ID. Use search_systems_tool beforehand.
+        - assigned_to  (strict)   — resolved employee ID of the IT person. Use search_employee_tool beforehand.
         - category     (medium)   — passed as-is.
         - created_date_str (medium) — natural-language date: 'today', 'yesterday', '2 days ago', 'last Monday'.
 
@@ -107,7 +107,7 @@ def search_tickets_tool(employee_id: str, title: Optional[str] = None, descripti
 @handle_tool_errors
 def create_ticket_tool(employee_id: str, title: str, description: str, 
                   status: str, priority: str, category: str, 
-                  assigned_to: str, notes: str, ticket_type: str = "INC", system_id: Optional[str] = None) -> Ticket:
+                  assigned_to: str, notes: str, ticket_type: str, system_id: Optional[str] = None) -> Ticket:
     """Creates a new ticket in the system. This tool however is very strict as it requires System ID and Employee ID 
         beforehand. To keep things modular, Employee ID and System ID lookup can be done using their respective tools
         and repositories.
@@ -121,7 +121,7 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
     category = validators.validate_not_empty(category, "category")
     status = validators.validate_status(status)
     priority = validators.validate_priority(priority)
-    ticket_type = validators.validate_not_empty(ticket_type, "ticket_type")
+    ticket_type = validators.validate_ticket_type(ticket_type)
 
     if not system_id or system_id.lower() in ("none", "null", ""):
         # Infer fallback
@@ -144,8 +144,8 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
     # Check for duplicate tickets
     existing_tickets = ticket_repository.search_tickets(employee_id=employee_id, system_id=system_id)
     for t in existing_tickets:
-        if t.status in ["Open", "In Progress"]:
-            raise ValueError(f"Duplicate Ticket Detected: A ticket for this system and employee is already open (Ticket ID: {t.id}). Please inform the user.")
+        if t.status in ["Open", "In Progress"] and t.title.lower() == title.lower():
+            raise ValueError(f"Duplicate Ticket Detected: A ticket with the same title is already open (Ticket ID: {t.id}). Please inform the user.")
     
     # Generate ID
     conn = ticket_repository.get_connection()
@@ -165,8 +165,8 @@ def create_ticket_tool(employee_id: str, title: str, description: str,
         category=category,
         system_id=system_id,
         assigned_to=assigned_to,
-        created_date=date.today(),
-        updated_date=date.today(),
+        created_date=datetime.now(),
+        updated_date=datetime.now(),
         notes=notes
     )
     
@@ -198,7 +198,7 @@ def update_ticket_tool(ticket_id: str, status: Optional[str] = None, priority: O
             ticket.notes = notes
     
         # Update the updated_date to now
-        ticket.updated_date = date.today()
+        ticket.updated_date = datetime.now()
     
         # Persist the updated ticket in the database
         updated_ticket = ticket_repository.update_ticket(ticket)

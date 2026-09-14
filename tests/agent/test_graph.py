@@ -38,7 +38,10 @@ def test_graph_visualization():
 
 class MockTriageLLM:
     def invoke(self, *args, **kwargs):
-        return TriageDecision(next_node="kb_node")
+        return TriageDecision(
+            next_node="kb_node",
+            routing_reason="The user is asking for VPN instructions.",
+        )
 
 class MockKBLLM:
     def __init__(self, tool_call):

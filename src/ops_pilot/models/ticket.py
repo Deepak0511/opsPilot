@@ -1,5 +1,5 @@
 # Data Model
-from datetime import date
+from datetime import datetime
 from pydantic import BaseModel, Field
 from google.genai._gaos.types.interactions import harmcategory
 from typing import Optional
@@ -14,6 +14,6 @@ class Ticket(BaseModel):
     category: str
     system_id: str # Tells where the problem is.
     assigned_to: str # employee_id Of the IT Support Person
-    created_date: date
-    updated_date: date
+    created_date: datetime
+    updated_date: datetime
     notes: Optional[str] = None

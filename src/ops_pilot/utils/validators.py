@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 VALID_STATUSES = {"Open", "In Progress", "Resolved", "Closed", "On Hold"}
 VALID_PRIORITIES = {"Low", "Medium", "High", "Critical"}
+VALID_TICKET_TYPES = {"INC", "ITR"}
 
 def validate_not_empty(value: Optional[str], field_name: str) -> str:
     """Ensures a string is provided and not purely whitespace."""
@@ -38,3 +39,10 @@ def validate_priority(value: Optional[str]) -> str:
     if not mapped:
         raise ValueError(f"Invalid priority '{value}'. Allowed values are: {', '.join(VALID_PRIORITIES)}.")
     return mapped
+
+def validate_ticket_type(value: Optional[str]) -> str:
+    """Ensures the ticket type is an incident or request."""
+    value = validate_not_empty(value, "ticket_type").upper()
+    if value not in VALID_TICKET_TYPES:
+        raise ValueError(f"Invalid ticket type '{value}'. Allowed values are: {', '.join(sorted(VALID_TICKET_TYPES))}.")
+    return value

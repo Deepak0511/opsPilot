@@ -71,7 +71,8 @@ def test_create_ticket_tool(mocker, mock_ticket):
         "category": "Software",
         "system_id": "SYS-001",
         "assigned_to": "A001",
-        "notes": ""
+        "notes": "",
+        "ticket_type": "INC"
     })
     
     assert result.id == "INC-001"
@@ -81,7 +82,8 @@ def test_create_ticket_tool_duplicate(mocker, mock_ticket):
     mocker.patch("ops_pilot.tools.ticket_toolchain.employee_repository.find_employee_by_id", return_value=Employee(id="E001", name="Test", email="test@test", department="IT"))
     mocker.patch("ops_pilot.tools.ticket_toolchain.system_repository.find_system_by_id", return_value=System(id="SYS-001", name="Test System", status="Online"))
     
-    # Mock duplicate check to return an existing Open ticket
+    # Mock duplicate check to return an existing Open ticket with same title
+    mock_ticket.title = "Test"
     mocker.patch("ops_pilot.tools.ticket_toolchain.ticket_repository.search_tickets", return_value=[mock_ticket])
 
     result = create_ticket_tool.invoke({
@@ -93,7 +95,8 @@ def test_create_ticket_tool_duplicate(mocker, mock_ticket):
         "category": "Software",
         "system_id": "SYS-001",
         "assigned_to": "A001",
-        "notes": ""
+        "notes": "",
+        "ticket_type": "INC"
     })
     
     assert "Duplicate Ticket Detected" in result
@@ -116,7 +119,8 @@ def test_create_ticket_tool_fallback_system(mocker, mock_ticket):
         "priority": "Low",
         "category": "Hardware",
         "assigned_to": "A001",
-        "notes": ""
+        "notes": "",
+        "ticket_type": "INC"
     })
     
     assert result.id == "INC-001"

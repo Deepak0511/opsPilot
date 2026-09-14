@@ -27,8 +27,8 @@ def test_generate_ticket_id(db_connection):
     assert ticket_id == "INC-002"
     
     # Different type starts at 1
-    ticket_id = generate_ticket_id(db_connection, "RIT")
-    assert ticket_id == "RIT-001"
+    ticket_id = generate_ticket_id(db_connection, "ITR")
+    assert ticket_id == "ITR-001"
 
 def test_generate_ticket_id_invalid_type(db_connection):
     with pytest.raises(ValueError, match="Invalid ticket type 'XYZ'"):

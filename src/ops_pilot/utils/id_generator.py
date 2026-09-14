@@ -6,7 +6,7 @@ Generates human-readable, pattern-based unique identifiers.
 Patterns
 --------
 Employee : 6-char alphanumeric (human-friendly)   e.g. A3K9M2
-Ticket   : <TYPE>-<serial>                        e.g. INC-001, RIT-042
+Ticket   : <TYPE>-<serial>                        e.g. INC-001, ITR-042
 KB       : KB-<serial>                             e.g. KB-001, KB-017
 System   : Use ulid.new() directly (ulid-py)
 """
@@ -20,7 +20,7 @@ _FRIENDLY_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 
 # Valid ticket type prefixes
 TICKET_TYPE_INCIDENT = "INC"
-TICKET_TYPE_REQUEST = "RIT"
+TICKET_TYPE_REQUEST = "ITR"
 VALID_TICKET_TYPES = {TICKET_TYPE_INCIDENT, TICKET_TYPE_REQUEST}
 
 
@@ -45,7 +45,7 @@ def _next_serial(conn: sqlite3.Connection, prefix: str) -> int:
     conn : sqlite3.Connection
         Active database connection.
     prefix : str
-        The sequence name / ID prefix (e.g. "INC", "RIT", "KB").
+        The sequence name / ID prefix (e.g. "INC", "ITR", "KB").
 
     Returns
     -------
@@ -95,7 +95,7 @@ def generate_employee_id(length: int = 6) -> str:
 
 def generate_ticket_id(conn: sqlite3.Connection, ticket_type: str = "INC") -> str:
     """
-    Generate the next ticket ID: INC-001, RIT-042, etc.
+    Generate the next ticket ID: INC-001, ITR-042, etc.
 
     Queries SQLite for the next serial number automatically.
 
@@ -104,12 +104,12 @@ def generate_ticket_id(conn: sqlite3.Connection, ticket_type: str = "INC") -> st
     conn : sqlite3.Connection
         Active database connection.
     ticket_type : str
-        "INC" (incident) or "RIT" (request). Default "INC".
+        "INC" (incident) or "ITR" (request). Default "INC".
 
     Returns
     -------
     str
-        e.g. "INC-001", "RIT-003"
+        e.g. "INC-001", "ITR-003"
 
     Raises
     ------

@@ -4,7 +4,10 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 def test_triage_node(mocker):
     # We need to mock structured_triage_llm
-    mock_triage_decision = TriageDecision(next_node="kb_node")
+    mock_triage_decision = TriageDecision(
+        next_node="kb_node",
+        routing_reason="The user is asking for password reset instructions.",
+    )
     mock_llm = mocker.patch("ops_pilot.agent.nodes.structured_triage_llm")
     mock_llm.invoke.return_value = mock_triage_decision
     
@@ -13,7 +16,10 @@ def test_triage_node(mocker):
     state = AgentState(messages=[HumanMessage(content="How do I reset my password?")])
     result = triage_node(state)
     
-    assert result == {"next_node": "kb_node"}
+    assert result == {
+        "next_node": "kb_node",
+        "routing_reason": "The user is asking for password reset instructions.",
+    }
     mock_llm.invoke.assert_called_once()
 
 def test_kb_node(mocker):

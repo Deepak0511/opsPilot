@@ -16,8 +16,12 @@ def test_agent_state_with_messages():
 
 def test_triage_decision_validation():
     # Valid
-    decision = TriageDecision(next_node="kb_node")
+    decision = TriageDecision(
+        next_node="kb_node",
+        routing_reason="The request is a knowledge-base question.",
+    )
     assert decision.next_node == "kb_node"
+    assert decision.routing_reason == "The request is a knowledge-base question."
     
     # Invalid
     with pytest.raises(Exception):
