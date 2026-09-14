@@ -19,6 +19,7 @@ if str(SRC_DIR) not in sys.path:
 
 from ops_pilot.agent.graph import create_agent
 from ops_pilot.agent.state import AgentState
+from ops_pilot.ui.theme import apply_enterprise_theme
 
 
 @st.cache_resource
@@ -40,6 +41,8 @@ def reset_conversation() -> None:
 
 
 st.set_page_config(page_title="OpsPilot", page_icon="🪼", layout="wide")
+# Disable this line to remove custom enterprise styling
+apply_enterprise_theme()
 st.title("OpsPilot")
 st.caption("IT support assistant")
 

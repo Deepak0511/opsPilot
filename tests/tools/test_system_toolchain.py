@@ -24,8 +24,8 @@ def test_count_systems_tool(mocker):
     mock_count.assert_called_once_with(name="Database", status=None)
 
 def test_search_systems_tool_no_args():
-    with pytest.raises(ValueError, match="At least one search parameter"):
-        search_systems_tool.invoke({})
+    result = search_systems_tool.invoke({})
+    assert isinstance(result, str) and result.startswith("Validation Error")
 
 def test_search_systems_tool_by_name(mocker, mock_system):
     mock_search = mocker.patch("ops_pilot.tools.system_toolchain.system_repository.search_systems_by_name")
@@ -47,5 +47,5 @@ def test_search_systems_tool_by_status(mocker, mock_system):
 def test_search_systems_tool_not_found(mocker):
     mocker.patch("ops_pilot.tools.system_toolchain.system_repository.search_systems_by_name", return_value=[])
     
-    with pytest.raises(ValueError, match="No systems found matching the provided criteria."):
-        search_systems_tool.invoke({"name": "Unknown"})
+    result = search_systems_tool.invoke({"name": "Unknown"})
+    assert isinstance(result, str) and result.startswith("Validation Error")

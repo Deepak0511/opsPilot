@@ -109,6 +109,8 @@ def init_db():
         ("SYS-SSO", "Okta Single Sign-On", "operational", "Identity and access management.", "2026-09-12T08:15:00"),
         ("SYS-WIFI", "Office Guest WiFi", "down", "Guest network in the main office.", "2026-09-12T08:20:00"),
         ("SYS-GIT", "GitLab Repository", "operational", "Source code management.", "2026-09-12T08:25:00"),
+        ("SYS-HW", "IT Hardware Assets", "operational", "Physical IT assets like laptops and peripherals.", "2026-09-12T08:00:00"),
+        ("SYS-OTHER", "Miscellaneous / Other", "operational", "Fallback system for issues not fitting other categories.", "2026-09-12T08:00:00"),
     ]
     cursor.executemany("INSERT INTO systems VALUES (?, ?, ?, ?, ?)", systems)
     

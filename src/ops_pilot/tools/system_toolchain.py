@@ -4,19 +4,27 @@ from ops_pilot.models.system import System
 from ops_pilot.utils.logger import log
 
 import ops_pilot.repository.system_repository as system_repository
+from ops_pilot.utils.error_handler import handle_tool_errors
+from ops_pilot.utils import validators
 
 
 @tool
+@handle_tool_errors
 def count_systems_tool(name: Optional[str] = None, status: Optional[str] = None) -> int:
     """Returns the count of systems matching the given filters.
     Call this BEFORE search_systems to gauge result-set size.
     Helps the AI decide whether to refine filters or fetch directly.
     """
     log.info(f"Tool invoked: count_systems_tool(name={name}, status={status})")
+    if name:
+        name = validators.validate_not_empty(name, "name")
+    if status:
+        status = validators.validate_not_empty(status, "status")
     return system_repository.count_systems(name=name, status=status)
 
 
 @tool
+@handle_tool_errors
 def search_systems_tool(name: Optional[str] = None, status: Optional[str] = None) -> list[System]:
     """Searches for IT systems by optional name and/or status.
     At least one parameter must be provided. The goal is to narrow down to a single system
@@ -24,6 +32,11 @@ def search_systems_tool(name: Optional[str] = None, status: Optional[str] = None
     Use count_systems first to check result-set size.
     """
     log.info(f"Tool invoked: search_systems_tool(name={name}, status={status})")
+    if name:
+        name = validators.validate_not_empty(name, "name")
+    if status:
+        status = validators.validate_not_empty(status, "status")
+
     if not any([name, status]):
         raise ValueError("At least one search parameter (name or status) must be provided.")
 
@@ -37,6 +50,6 @@ def search_systems_tool(name: Optional[str] = None, status: Optional[str] = None
         results = system_repository.search_systems_by_status(status)
 
     if not results:
-        raise ValueError("No systems found matching the provided criteria.")
+        raise ValueError("No systems found for your query. Please ask the user to clarify their input or check your spelling.")
 
     return results

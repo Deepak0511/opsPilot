@@ -46,15 +46,34 @@ def test_search_employee_tool_by_name(mocker, mock_employee):
     mock_search_by_name.assert_called_once_with("John Doe")
 
 def test_search_employee_tool_no_args():
-    with pytest.raises(ValueError, match="At least name or email must be provided."):
-        search_employee_tool.invoke({})
+    result = search_employee_tool.invoke({})
+    assert isinstance(result, str) and result.startswith("Validation Error")
 
 def test_search_employee_tool_not_found(mocker):
     mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.find_employee_by_email", return_value=None)
     mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.search_employees_by_name", return_value=[])
     
-    with pytest.raises(ValueError, match="No employees found matching the provided criteria."):
-        search_employee_tool.invoke({"name": "Nobody"})
+    result = search_employee_tool.invoke({"name": "Nobody"})
+    assert isinstance(result, str) and result.startswith("Validation Error")
+
+def test_search_employee_tool_ambiguous(mocker, mock_employee):
+    # Mock search to return 4 employees
+    mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.find_employee_by_email", return_value=None)
+    mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.search_employees_by_name", return_value=[mock_employee] * 4)
+    
+    result = search_employee_tool.invoke({"name": "John Doe"})
+    # Should return Validation Error for ambiguous results > 3
+    assert isinstance(result, str) and "Ambiguous search" in result
+
+def test_search_employee_tool_by_id(mocker, mock_employee):
+    mock_find_by_id = mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.find_employee_by_id")
+    mock_find_by_id.return_value = mock_employee
+
+    result = search_employee_tool.invoke({"employee_id": "E001"})
+    
+    assert len(result) == 1
+    assert result[0].id == "E001"
+    mock_find_by_id.assert_called_once_with("E001")
 
 def test_count_employees_in_department_tool(mocker):
     mock_count = mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.count_employees_by_department")
@@ -75,5 +94,5 @@ def test_get_employees_by_department_tool(mocker, mock_employee):
 
 def test_get_employees_by_department_tool_not_found(mocker):
     mocker.patch("ops_pilot.tools.employee_toolchain.employee_repository.find_employees_by_department", return_value=[])
-    with pytest.raises(ValueError, match="No employees found in department 'HR'"):
-        get_employees_by_department_tool.invoke({"department": "HR"})
+    result = get_employees_by_department_tool.invoke({"department": "HR"})
+    assert isinstance(result, str) and result.startswith("Validation Error")

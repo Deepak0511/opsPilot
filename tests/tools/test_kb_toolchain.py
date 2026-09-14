@@ -25,8 +25,8 @@ def test_count_knowledge_base_articles_tool(mocker):
     mock_count.assert_called_once_with(title="Reset", category=None, incident_id=None, tag=None)
 
 def test_search_knowledge_base_tool_no_args():
-    with pytest.raises(ValueError, match="At least one search parameter must be provided."):
-        search_knowledge_base_tool.invoke({})
+    result = search_knowledge_base_tool.invoke({})
+    assert isinstance(result, str) and result.startswith("Validation Error")
 
 def test_search_knowledge_base_tool_by_title(mocker, mock_kb):
     mock_search = mocker.patch("ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_title")
@@ -50,5 +50,5 @@ def test_search_knowledge_base_tool_multiple_filters(mocker, mock_kb):
 def test_search_knowledge_base_tool_not_found(mocker):
     mocker.patch("ops_pilot.tools.kb_toolchain.kb_repository.search_knowledge_base_by_title", return_value=[])
 
-    with pytest.raises(ValueError, match="No knowledge base articles found matching the provided criteria."):
-        search_knowledge_base_tool.invoke({"title": "Unknown"})
+    result = search_knowledge_base_tool.invoke({"title": "Unknown"})
+    assert isinstance(result, str) and result.startswith("Validation Error")
