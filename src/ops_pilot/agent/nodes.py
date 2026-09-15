@@ -27,7 +27,7 @@ from ops_pilot.utils.logger import log
 import ops_pilot.repository.system_repository as system_repository
 import re
 
-MAX_EXECUTION_STEPS = 12
+MAX_EXECUTION_STEPS = 200
 
 
 def _step_update(state: AgentState, node_name: str, *, reset: bool = False) -> dict:
@@ -141,19 +141,23 @@ def ticket_logger_node(state: AgentState) -> dict:
 
 
 def _ticket_confirmation_summary(draft: TicketDraft) -> str:
-    operation = "create" if draft.operation == "CREATE" else "update"
-    details = [
-        f"operation={operation}",
-        f"ticket_id={draft.ticket_id or 'new'}",
-        f"title={draft.title or 'not provided'}",
-        f"system_id={draft.system_id or 'not provided'}",
-        f"priority={draft.priority or 'automatic'}",
+    operation = "Create" if draft.operation == "CREATE" else "Update"
+    lines = [
+        "Please review the details of the support ticket that will be raised below:\n",
+        f"**Operation**: {operation}",
+        f"**Ticket ID**: {draft.ticket_id or 'New'}",
+        f"**System ID**: {draft.system_id or 'Not provided'}",
+        f"**Employee ID**: {draft.employee_id or 'Not provided'}",
+        f"**Title**: {draft.title or 'Not provided'}",
+        f"**Description**: {draft.description or 'Not provided'}",
+        f"**Category**: {draft.category or 'Not provided'}",
+        f"**Status**: {draft.status or 'Not provided'}",
+        f"**Ticket Type**: {draft.ticket_type or 'Not provided'}",
+        f"**Priority**: {draft.priority or 'Automatic'}",
+        "",
+        "Should I proceed with this action? Please answer **yes** or **no**."
     ]
-    return (
-        "I have prepared the following ticket action: "
-        + "; ".join(details)
-        + ". Should I proceed? Please answer yes or no."
-    )
+    return "  \n".join(lines)
 
 
 triage_llm = load_llm()  # No tools bound — it can only think and respond
@@ -383,9 +387,27 @@ def apply_confirmed_ticket_change_node(state: AgentState) -> dict:
             **_step_update(state, "APPLY_CONFIRMED_TICKET_CHANGE"),
         }
 
-    ticket_id = getattr(result, "id", draft.ticket_id or "the ticket")
+    if hasattr(result, "id"):
+        ticket = result
+        lines = [
+            "✅ **Ticket action completed successfully.**\n",
+            f"**Ticket ID**: {ticket.id}",
+            f"**System ID**: {ticket.system_id}",
+            f"**Employee ID**: {ticket.employee_id}",
+            f"**Assigned To**: {ticket.assigned_to}",
+            f"**Title**: {ticket.title}",
+            f"**Description**: {ticket.description}",
+            f"**Category**: {ticket.category}",
+            f"**Status**: {ticket.status}",
+            f"**Priority**: {ticket.priority}"
+        ]
+        msg = "  \n".join(lines)
+    else:
+        ticket_id = getattr(result, "id", draft.ticket_id or "the ticket")
+        msg = f"✅ Ticket action completed successfully for {ticket_id}."
+
     return {
-        "messages": [AIMessage(content=f"Ticket action completed successfully for {ticket_id}.")],
+        "messages": [AIMessage(content=msg)],
         "pending_ticket_draft": None,
         "awaiting_ticket_confirmation": False,
         "ticket_confirmation_decision": "CONFIRMED",
