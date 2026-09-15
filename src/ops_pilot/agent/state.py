@@ -21,10 +21,10 @@ class AgentState(BaseModel):
 
 class TriageDecision(BaseModel):
     next_node: Literal[
-        "kb_node",
-        "infra_node",
-        "ticket_read_node",
-        "ticket_logger_node",
+        "INFRASTRUCTURE_LOOKUP_REQUEST",
+        "KNOWLEDGE_BASE_LOOKUP_REQUEST",
+        "TICKET_LOOKUP_REQUEST",
+        "TICKET_ACTION_REQUEST",
     ]
     routing_reason: str = Field(
         description="Brief explanation for why this node was selected."

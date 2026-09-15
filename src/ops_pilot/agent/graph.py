@@ -28,41 +28,42 @@ def create_agent():
     )
     checkpoint_saver = SqliteSaver(checkpoint_connection)
     # ── Register nodes ──
-    graph.add_node("triage", triage_node)
-    graph.add_node("kb_node", kb_node)
-    graph.add_node("infra_node", infra_node)
-    graph.add_node("ticket_read_node", ticket_read_node)
-    graph.add_node("ticket_logger_node", ticket_logger_node)
-    graph.add_node("tools", tool_executor)
+    graph.add_node("TRIAGE_MANAGER", triage_node)
+    graph.add_node("KNOWLEDGE_BASE_MANAGER", kb_node)
+    graph.add_node("INFRASTRUCTURE_MANAGER", infra_node)
+    graph.add_node("TICKET_READ_MANAGER", ticket_read_node)
+    graph.add_node("TICKET_WRITE_MANAGER", ticket_logger_node)
+    graph.add_node("TOOLS", tool_executor)
 
     # ── Entry ──
-    graph.add_edge(START, "triage")
+    graph.add_edge(START, "TRIAGE_MANAGER")
 
+    
     # ── Triage routes to specialized nodes ──
-    graph.add_conditional_edges("triage", triage_router, {
-        "kb_node": "kb_node",
-        "infra_node": "infra_node",
-        "ticket_read_node": "ticket_read_node",
-        "ticket_logger_node": "ticket_logger_node",
+    graph.add_conditional_edges("TRIAGE_MANAGER", triage_router, {
+        "INFRASTRUCTURE_LOOKUP_REQUEST": "INFRASTRUCTURE_MANAGER",
+        "KNOWLEDGE_BASE_LOOKUP_REQUEST": "KNOWLEDGE_BASE_MANAGER",
+        "TICKET_LOOKUP_REQUEST": "TICKET_READ_MANAGER",
+        "TICKET_ACTION_REQUEST": "TICKET_WRITE_MANAGER",
     })
 
     # ── Each specialized node checks if it needs tools ──
     # If the LLM requested a tool, go to "tools". If it gave a final answer, go to END.
-    for node_name in ["kb_node", "infra_node", "ticket_read_node", "ticket_logger_node"]:
+    for manager_name  in ["INFRASTRUCTURE_MANAGER", "KNOWLEDGE_BASE_MANAGER", "TICKET_READ_MANAGER", "TICKET_WRITE_MANAGER"]:
         graph.add_conditional_edges(
-            node_name, 
+            manager_name , 
             route_after_agent,
             {
-                "tools": "tools",
-                "kb_node": "kb_node",
-                "ticket_read_node": "ticket_read_node",
-                "ticket_logger_node": "ticket_logger_node",
-                "done": END,
+                "TOOLS": "TOOLS",
+                "KNOWLEDGE_BASE_MANAGER": "KNOWLEDGE_BASE_MANAGER",
+                "TICKET_READ_MANAGER": "TICKET_READ_MANAGER",
+                "TICKET_WRITE_MANAGER": "TICKET_WRITE_MANAGER",
+                "DONE": END,
             }
         )
 
     # ── After tools execute, go back to the node that called them ──
     # This creates the ReAct loop: Node -> Tools -> Node -> Tools -> Node -> END
-    graph.add_conditional_edges("tools", route_after_tools)
+    graph.add_conditional_edges("TOOLS", route_after_tools)
 
     return graph.compile(checkpointer=checkpoint_saver)

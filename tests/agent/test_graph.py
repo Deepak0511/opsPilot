@@ -8,33 +8,33 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolCall
 
 def test_triage_router_defaults_to_infra_node():
     state = AgentState(messages=[HumanMessage(content="Need help with a system issue")])
-    assert triage_router(state) == "infra_node"
+    assert triage_router(state) == "INFRASTRUCTURE_LOOKUP_REQUEST"
 
 
 def test_triage_router_forces_kb_through_infra_node():
     state = AgentState(
         messages=[HumanMessage(content="How do I raise a reimbursement request?")],
-        next_node="kb_node",
+        next_node="KNOWLEDGE_BASE_LOOKUP_REQUEST",
     )
-    assert triage_router(state) == "infra_node"
+    assert triage_router(state) == "INFRASTRUCTURE_LOOKUP_REQUEST"
 
 
 def test_infra_node_continues_to_kb_after_context_is_gathered():
     state = AgentState(
         messages=[AIMessage(content="System context gathered")],
-        current_branch="infra_node",
-        next_node="kb_node",
+        current_branch="INFRASTRUCTURE_MANAGER",
+        next_node="KNOWLEDGE_BASE_LOOKUP_REQUEST",
     )
-    assert route_after_agent(state) == "kb_node"
+    assert route_after_agent(state) == "KNOWLEDGE_BASE_MANAGER"
 
 
 def test_infra_node_continues_to_ticket_logger_when_selected():
     state = AgentState(
         messages=[AIMessage(content="System context gathered")],
-        current_branch="infra_node",
-        next_node="ticket_logger_node",
+        current_branch="INFRASTRUCTURE_MANAGER",
+        next_node="TICKET_ACTION_REQUEST",
     )
-    assert route_after_agent(state) == "ticket_logger_node"
+    assert route_after_agent(state) == "TICKET_WRITE_MANAGER"
 
 
 def test_create_agent():
@@ -48,12 +48,12 @@ def test_create_agent():
     # Check if expected nodes exist in the compiled graph's nodes mapping
     nodes = app.nodes.keys()
     expected_nodes = [
-        "triage", 
-        "kb_node", 
-        "infra_node", 
-        "ticket_read_node", 
-        "ticket_logger_node", 
-        "tools"
+        "TRIAGE_MANAGER",
+        "KNOWLEDGE_BASE_MANAGER",
+        "INFRASTRUCTURE_MANAGER",
+        "TICKET_READ_MANAGER",
+        "TICKET_WRITE_MANAGER",
+        "TOOLS"
     ]
     for n in expected_nodes:
         assert n in nodes
@@ -73,7 +73,7 @@ def test_graph_visualization():
 class MockTriageLLM:
     def invoke(self, *args, **kwargs):
         return TriageDecision(
-            next_node="kb_node",
+            next_node="KNOWLEDGE_BASE_LOOKUP_REQUEST",
             routing_reason="The user is asking for VPN instructions.",
         )
 

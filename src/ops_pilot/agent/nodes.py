@@ -18,8 +18,8 @@ from ops_pilot.prompts.system_prompt import (
     TRIAGE_MANAGER_PROMPT,
     KNOWLEDGE_BASE_MANAGER_PROMPT,
     INFRASTRUCTURE_MANAGER_PROMPT,
-    TICKET_READER_MANAGER_PROMPT,
-    TICKET_LOGGER_MANAGER_PROMPT,
+    TICKET_READ_MANAGER_PROMPT,
+    TICKET_WRITE_MANAGER_PROMPT,
 )
 from ops_pilot.utils.large_language_models import load_llm
 from ops_pilot.utils.logger import log
@@ -34,7 +34,7 @@ def kb_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(KNOWLEDGE_BASE_MANAGER_PROMPT, state))
     response = kb_llm.invoke([sys_msg] + state.messages)   # This LLM can ONLY call KB tools
     log.debug(f"kb_node response: {response}")
-    return {"messages": [response], "current_branch": "kb_node"}
+    return {"messages": [response], "current_branch": "KNOWLEDGE_BASE_MANAGER"}
 
 
 # ── Infra Node: can ONLY check system status ──
@@ -46,7 +46,7 @@ def infra_node(state: AgentState) -> dict:
     sys_msg = SystemMessage(content=_prompt_with_routing_context(INFRASTRUCTURE_MANAGER_PROMPT, state))
     response = infra_llm.invoke([sys_msg] + state.messages)  # Can ONLY check systems
     log.debug(f"infra_node response: {response}")
-    return {"messages": [response], "current_branch": "infra_node"}
+    return {"messages": [response], "current_branch": "INFRASTRUCTURE_MANAGER"}
 
 
 # ── Ticket Reader: can search tickets and resolve lookup identifiers ──
@@ -60,10 +60,10 @@ ticket_read_llm = load_llm().bind_tools(ticket_read_tools)
 
 def ticket_read_node(state: AgentState) -> dict:
     log.info("Agent entered node: ticket_read_node")
-    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_READER_MANAGER_PROMPT, state))
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_READ_MANAGER_PROMPT, state))
     response = ticket_read_llm.invoke([sys_msg] + state.messages)  # Can ONLY read, never create
     log.debug(f"ticket_read_node response: {response}")
-    return {"messages": [response], "current_branch": "ticket_read_node"}
+    return {"messages": [response], "current_branch": "TICKET_READ_MANAGER"}
 
 
 # ── Ticket Logger: can write tickets and resolve required identifiers ──
@@ -77,10 +77,10 @@ ticket_write_llm = load_llm().bind_tools(ticket_write_tools)
 
 def ticket_logger_node(state: AgentState) -> dict:
     log.info("Agent entered node: ticket_logger_node")
-    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_LOGGER_MANAGER_PROMPT, state))
+    sys_msg = SystemMessage(content=_prompt_with_routing_context(TICKET_WRITE_MANAGER_PROMPT, state))
     response = ticket_write_llm.invoke([sys_msg] + state.messages)  # Can ONLY write tickets
     log.debug(f"ticket_logger_node response: {response}")
-    return {"messages": [response], "current_branch": "ticket_logger_node"}
+    return {"messages": [response], "current_branch": "TICKET_WRITE_MANAGER"}
 
 
 triage_llm = load_llm()  # No tools bound — it can only think and respond
@@ -104,10 +104,10 @@ def triage_node(state: AgentState) -> dict:
         TriageDecision,
         structured_triage_llm.invoke([sys_msg] + state.messages),
     )
-    if decision.next_node == "ticket_logger_node" and _is_guidance_request(user_request):
+    if decision.next_node == "TICKET_ACTION_REQUEST" and _is_guidance_request(user_request):
         decision = decision.model_copy(
             update={
-                "next_node": "infra_node",
+                "next_node": "INFRASTRUCTURE_LOOKUP_REQUEST",
                 "routing_reason": "The user is asking for procedural guidance, so gather system context before the KB step.",
             }
         )
@@ -142,5 +142,4 @@ for tool in kb_tools + infra_tools + ticket_read_tools + ticket_write_tools:
     if tool.name not in tool_names:
         all_tools.append(tool)
         tool_names.add(tool.name)
-
 

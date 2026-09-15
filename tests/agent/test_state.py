@@ -17,10 +17,10 @@ def test_agent_state_with_messages():
 def test_triage_decision_validation():
     # Valid
     decision = TriageDecision(
-        next_node="kb_node",
+        next_node="KNOWLEDGE_BASE_LOOKUP_REQUEST",
         routing_reason="The request is a knowledge-base question.",
     )
-    assert decision.next_node == "kb_node"
+    assert decision.next_node == "KNOWLEDGE_BASE_LOOKUP_REQUEST"
     assert decision.routing_reason == "The request is a knowledge-base question."
     
     # Invalid
