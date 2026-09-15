@@ -9,22 +9,22 @@ def test_route_after_agent_with_tools():
     msg = AIMessage(content="", tool_calls=[tool_call])
     state = AgentState(messages=[msg])
     
-    assert route_after_agent(state) == "tools"
+    assert route_after_agent(state) == "TOOLS"
 
 def test_route_after_agent_without_tools():
     msg = AIMessage(content="Hello")
     state = AgentState(messages=[msg])
     
-    assert route_after_agent(state) == "done"
+    assert route_after_agent(state) == "DONE"
 
 def test_route_after_tools():
-    state = AgentState(current_branch="kb_node")
-    assert route_after_tools(state) == "kb_node"
+    state = AgentState(current_branch="KNOWLEDGE_BASE_MANAGER")
+    assert route_after_tools(state) == "KNOWLEDGE_BASE_MANAGER"
 
 def test_triage_router():
-    state = AgentState(next_node="infra_node")
-    assert triage_router(state) == "infra_node"
+    state = AgentState(next_node="INFRASTRUCTURE_LOOKUP_REQUEST")
+    assert triage_router(state) == "INFRASTRUCTURE_LOOKUP_REQUEST"
     
 def test_triage_router_fallback():
     state = AgentState()
-    assert triage_router(state) == "infra_node"
+    assert triage_router(state) == "INFRASTRUCTURE_LOOKUP_REQUEST"
