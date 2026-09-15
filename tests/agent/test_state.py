@@ -7,6 +7,8 @@ def test_agent_state_initialization():
     assert state.messages == []
     assert state.current_branch is None
     assert state.next_node is None
+    assert state.infrastructure_context_status is None
+    assert state.infrastructure_context == []
 
 def test_agent_state_with_messages():
     msg = HumanMessage(content="Hello")

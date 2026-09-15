@@ -195,7 +195,7 @@ def infer_priority(title: str, description: str, category: str) -> str:
 
 def get_default_assignee() -> str:
     """Assign new tickets to the first available employee in the IT department."""
-    employees = employee_repository.find_employees_by_department("IT", offset=0, limit=1)
+    employees = employee_repository.find_employees_by_department("IT Support", offset=0, limit=1)
     if not employees:
         raise ValueError("No employees are available in the IT department for ticket assignment.")
     return employees[0].id

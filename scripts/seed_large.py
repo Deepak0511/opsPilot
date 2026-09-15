@@ -67,90 +67,49 @@ def generate_large_dataset():
     
     real_world_base = [
         # HR & Employee Experience
-        ("Kronos", "HR", "timesheets, time tracking, clock in, clock out, shift, hourly, payroll time, punches, overtime, breaks"),
         ("Workday Time", "HR", "timesheets, pto, vacation request, leave of absence, time tracking, absence, sick days, hours logged"),
-        ("Toggl", "HR", "time tracking, timesheets, billable hours, project time, stopwatch, timer, client hours"),
-        ("Harvest", "HR", "timesheets, invoicing, time tracking, billable, expenses, hours"),
         ("ADP", "HR", "payroll, paycheck, tax forms, w2, w-2, salary, direct deposit, benefits, deductions, compensation"),
-        ("Paylocity", "HR", "payroll, human resources, benefits, salary, direct deposit, paycheck"),
-        ("Gusto", "HR", "payroll, contractor payment, benefits, 401k, health insurance, taxes, onboarding"),
         ("Concur", "HR", "expenses, travel, flights, hotels, reimbursement, receipt, out of pocket, per diem, report, corporate card, amex"),
-        ("Expensify", "HR", "expenses, receipt scanning, reimbursement, corporate card, out of pocket, report, spending"),
-        ("Navan", "HR", "travel booking, flights, hotels, corporate travel, expenses, rewards, tripactions"),
-        ("Rydoo", "HR", "expenses, receipt, travel, mileage reimbursement, business trip"),
         ("Lattice", "HR", "performance review, goals, okrs, 1 on 1, feedback, continuous feedback, peer review, 360 review"),
-        ("15Five", "HR", "check-in, performance, feedback, goals, okrs, engagement, survey"),
-        ("CultureAmp", "HR", "employee engagement, survey, culture, feedback, performance review"),
         ("Greenhouse", "HR", "recruiting, applicant tracking, ats, interview, candidate, scorecard, offer letter, resume"),
-        ("Lever", "HR", "recruiting, ats, applicant tracking, sourcing, interview, candidate pipeline, hiring"),
-        ("BambooHR", "HR", "hris, employee directory, org chart, time off, onboarding, benefits, employee records"),
         
         # Engineering & DevOps
         ("GitHub Enterprise", "Engineering", "source control, git, repository, pr, pull request, code review, commit, branch, merge, actions, ci cd"),
-        ("GitLab", "Engineering", "source control, git, repository, merge request, pipeline, ci cd, runner, artifact, registry"),
-        ("Bitbucket", "Engineering", "source control, git, repository, pr, code review, pipeline, atlassian"),
-        ("Jenkins", "Engineering", "ci cd, pipeline, build, deploy, job, continuous integration, automation, artifact"),
-        ("CircleCI", "Engineering", "ci cd, pipeline, build, deploy, workflows, test runner, continuous integration"),
-        ("ArgoCD", "Engineering", "continuous delivery, gitops, kubernetes, deployment, cluster sync, application, rollout"),
-        ("Spinnaker", "Engineering", "continuous delivery, deployment, multi-cloud, pipeline, canary analysis, release"),
         ("Jira", "Engineering", "issue tracking, sprint, epic, story, bug, task, kanban, agile, scrum, board, ticket, backlog"),
-        ("Linear", "Engineering", "issue tracking, cycles, projects, bug, task, board, backlog, fast, agile"),
-        ("Asana", "Engineering", "project management, task tracking, board, timeline, list, project, goals"),
         ("Artifactory", "Engineering", "package manager, artifact storage, npm, maven, docker registry, pypi, jfrog, binaries"),
-        ("Docker Hub", "Engineering", "container registry, docker image, pull, push, tag, layers, container"),
         ("SonarQube", "Engineering", "code quality, static analysis, code coverage, bugs, vulnerabilities, code smell, tech debt"),
-        ("Snyk", "Engineering", "security, vulnerabilities, sca, dependencies, open source security, container scanning"),
-        ("Tortoise SVN", "Engineering", "svn, subversion, source control, legacy version control, checkout, commit, branch, merge"),
         
         # IT & Infra
         ("AWS", "Infrastructure", "cloud, compute, ec2, s3, rds, lambda, vpc, route53, iam, billing, elastic, infrastructure"),
-        ("GCP", "Infrastructure", "google cloud, compute engine, bigquery, gke, kubernetes, cloud storage, pubsub, cloud run"),
-        ("Azure", "Infrastructure", "microsoft cloud, azure vm, active directory, aks, blob storage, virtual network"),
         ("Datadog", "Infrastructure", "monitoring, observability, apm, traces, metrics, logs, dashboards, alerts, monitor, infrastructure"),
-        ("New Relic", "Infrastructure", "monitoring, apm, telemetry, traces, logs, dashboards, alerts, performance, uptime"),
-        ("Splunk", "Infrastructure", "logs, siem, search, index, dashboard, alerts, security events, query, forwarder"),
         ("Okta", "Access", "sso, single sign-on, identity, mfa, 2fa, duo, authenticator, login, password reset, app portal, access request"),
-        ("PingIdentity", "Access", "sso, identity, authentication, mfa, access management, password, login"),
-        ("Active Directory", "Access", "domain controller, ad, windows login, gpo, group policy, user account, password reset, ldap"),
         ("ServiceNow", "Access", "itsm, tickets, service catalog, incidents, cmdb, requests, change management, approval"),
-        ("Zendesk", "Access", "support tickets, helpdesk, macros, triggers, customer support, agents, chat"),
         ("Jamf", "Hardware", "mdm, macbook management, profiles, patching, remote wipe, software install, self service, apple"),
         ("Intune", "Hardware", "mdm, windows management, autopilot, compliance, profiles, remote wipe, mobile device"),
         ("Cisco Meraki", "Network", "networking, wifi, access point, switches, router, vpn, firewall, dashboard, connectivity"),
-        ("Palo Alto", "Network", "firewall, vpn, globalprotect, security, threat prevention, network rules, blocking"),
         
         # Finance & Procurement
         ("SAP S/4HANA", "Finance", "erp, accounting, finance, general ledger, accounts payable, accounts receivable, balance sheet, report"),
-        ("NetSuite", "Finance", "erp, accounting, finance, billing, revenue recognition, ledger, accounts payable"),
         ("Coupa", "Finance", "procurement, purchasing, purchase order, po, requisition, invoice, spending, approval"),
-        ("SAP Ariba", "Finance", "procurement, sourcing, contracts, supplier, purchase order, requisition, catalog"),
         ("Stripe", "Finance", "billing, payments, credit card, subscriptions, invoices, checkout, refund, chargeback"),
         
         # Sales & Marketing
         ("Salesforce", "Sales", "crm, leads, opportunities, accounts, contacts, reports, dashboards, sfdc, pipeline, forecast"),
-        ("HubSpot", "Sales", "crm, marketing automation, email campaigns, inbound, leads, contacts, deals, tracking"),
         ("Marketo", "Marketing", "marketing automation, email blast, campaign, lead scoring, landing page, forms, nurture"),
-        ("Outreach", "Sales", "sales enablement, sequences, cold email, calling, follow up, prospects, tasks"),
         
         # Security & Compliance
         ("CrowdStrike", "Security", "edr, endpoint protection, antivirus, malware, quarantine, sensor, security alert, falcon"),
-        ("SentinelOne", "Security", "edr, antivirus, malware, ransomware, quarantine, endpoint security, threat"),
         ("Qualys", "Security", "vulnerability management, scanning, vm, compliance, security scan, assets, patch management"),
         
         # Productivity & Collaboration
         ("Office 365", "Software", "word, excel, powerpoint, outlook, emails, calendar, spreadsheet, presentation, document, meeting"),
-        ("Google Workspace", "Software", "gmail, gsuite, docs, sheets, slides, drive, calendar, meet, spreadsheet, presentation"),
         ("Slack", "Software", "chat, messaging, channels, direct message, huddle, notification, integration, bot, emoji"),
-        ("Teams", "Software", "chat, video call, meeting, screenshare, channels, microsoft, collaboration, calendar"),
         ("Zoom", "Software", "video call, conferencing, meeting, webinar, recording, screen share, host, link"),
         ("Confluence", "Software", "wiki, documentation, pages, spaces, macros, knowledge base, notes, project plan"),
-        ("Notion", "Software", "wiki, documentation, databases, notes, pages, workspace, collaboration, tasks"),
-        ("Figma", "Software", "design, prototyping, ui, ux, wireframe, mockup, vector, collaboration, design system"),
         
         # Data & Analytics
         ("Snowflake", "Data", "data warehouse, sql, tables, views, query, compute, storage, analytics, schema"),
         ("Tableau", "Data", "bi, reporting, dashboards, visualization, charts, data source, extract, analytics"),
-        ("Looker", "Data", "bi, reporting, dashboards, lookml, explores, visualization, analytics, data"),
         ("Airflow", "Data", "data engineering, etl, dags, scheduling, pipelines, tasks, orchestration, jobs"),
     ]
     
@@ -168,22 +127,15 @@ def generate_large_dataset():
     # 2. Procedurally generate ~450 more internal tools to hit 500+ systems
     prefixes = ["Corp", "Ops", "Dev", "Intra", "Global", "Sec", "Data", "Cloud", "Net", "Tech", "Enterprise"]
     suffixes = ["Portal", "Tracker", "Hub", "Dashboard", "Manager", "Analyzer", "Sync", "Connect", "Gateway", "Vault", "Engine"]
-    domains = [
-        ("HR", "benefits, time tracking, employee records, internal policies, training, onboarding, offboarding"),
-        ("Engineering", "code snippets, internal tools, deployment logs, server access, api registry, microservices, architecture"),
-        ("Finance", "budgeting, approvals, expense reports, internal audits, receipts, vendor management"),
-        ("IT", "asset tracking, hardware inventory, network topology, firewall rules, server provisioning, access logs"),
-        ("Marketing", "asset library, brand guidelines, campaign calendar, email templates, social media planning"),
-        ("Data", "internal reports, data catalog, ml models, feature store, pipeline monitoring")
-    ]
+    domains = ["HR", "Engineering", "Finance", "IT", "Marketing", "Data"]
     
     while sys_count <= 520:
         pref = random.choice(prefixes)
         suff = random.choice(suffixes)
-        domain, tags = random.choice(domains)
-        name = f"{pref}{suff} {random.randint(1, 99)}"
+        domain = random.choice(domains)
+        name = f"{pref}{suff} {random.randint(1, 999)}"
         sys_id = f"SYS-{sys_count:03d}"
-        desc = f"Internal {domain} application. Tags: internal tool, custom, {tags}, {name.lower()}, {pref.lower()}"
+        desc = f"Internal {domain} application. Tags: internal tool, custom, {name.lower()}, {pref.lower()}"
         status = random.choices(["operational", "degraded", "down", "maintenance"], weights=[95, 3, 1, 1])[0]
         systems.append((sys_id, name, status, desc, "2026-09-10T08:00:00"))
         sys_count += 1

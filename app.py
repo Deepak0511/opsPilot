@@ -18,8 +18,8 @@ if str(SRC_DIR) not in sys.path:
 	sys.path.insert(0, str(SRC_DIR))
 
 from ops_pilot.agent.graph import create_agent
-from ops_pilot.agent.state import AgentState
 from ops_pilot.ui.theme import apply_enterprise_theme
+from ops_pilot.utils.logger import log
 
 
 @st.cache_resource
@@ -77,7 +77,8 @@ if prompt := st.chat_input("How can I help you?"):
 		st.markdown(prompt)
 
 	config: RunnableConfig = {
-		"configurable": {"thread_id": st.session_state.thread_id}
+		"configurable": {"thread_id": st.session_state.thread_id},
+		"recursion_limit": 12,
 	}
 	tool_executions = []
 
@@ -86,7 +87,7 @@ if prompt := st.chat_input("How can I help you?"):
 			with st.status("Working...", expanded=False) as status:
 				responses = []
 				for event in get_agent().stream(
-					AgentState(messages=[HumanMessage(content=prompt)]),
+					{"messages": [HumanMessage(content=prompt)]},
 					config,
 					stream_mode="updates",
 				):
@@ -135,5 +136,6 @@ if prompt := st.chat_input("How can I help you?"):
 			st.session_state.chat_messages.append(
 				{"role": "assistant", "content": response}
 			)
-		except Exception as error:
-			st.error(f"Something went wrong: {error}")
+		except Exception:
+			log.exception("OpsPilot request failed")
+			st.error("Something went wrong while handling your request. Please try again.")

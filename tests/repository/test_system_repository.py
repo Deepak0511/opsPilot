@@ -4,6 +4,7 @@ from ops_pilot.repository.system_repository import (
     find_system_by_id,
     search_systems_by_keyword,
     search_systems_by_status,
+    search_supported_systems_from_request,
     update_system,
     delete_system,
     count_systems,
@@ -75,3 +76,71 @@ def test_count_systems(db_connection, sample_system):
     assert count_systems(keyword="Main") == 1
     assert count_systems(keyword="Main", status="Online") == 1
     assert count_systems(keyword="Cache") == 0
+
+
+def test_search_supported_systems_from_full_request(db_connection):
+    create_system(
+        System(
+            id="SYS-VPN",
+            name="Patliputra VPN",
+            status="Operational",
+            description="Approved corporate virtual private network service.",
+        )
+    )
+
+    results = search_supported_systems_from_request(
+        "How do I reset my VPN password?"
+    )
+
+    assert [system.id for system in results] == ["SYS-VPN"]
+
+
+def test_search_supported_systems_returns_no_match_for_unknown_vendor(db_connection):
+    create_system(
+        System(
+            id="SYS-VPN",
+            name="Patliputra VPN",
+            status="Operational",
+            description="Approved corporate virtual private network service.",
+        )
+    )
+
+    assert search_supported_systems_from_request("Configure a public satellite service") == []
+
+
+def test_search_supported_systems_returns_tied_catalog_matches(db_connection):
+    create_system(
+        System(
+            id="SYS-INTERNET-A",
+            name="Acme Internet",
+            status="Operational",
+            description="Approved internet reimbursement vendor.",
+        )
+    )
+    create_system(
+        System(
+            id="SYS-INTERNET-B",
+            name="Bharat Internet",
+            status="Operational",
+            description="Approved internet reimbursement vendor.",
+        )
+    )
+
+    results = search_supported_systems_from_request(
+        "How do I submit an internet reimbursement?"
+    )
+
+    assert [system.id for system in results] == ["SYS-INTERNET-A", "SYS-INTERNET-B"]
+
+
+def test_search_supported_systems_ignores_filler_only_request(db_connection):
+    create_system(
+        System(
+            id="SYS-VPN",
+            name="Patliputra VPN",
+            status="Operational",
+            description="Approved corporate virtual private network service.",
+        )
+    )
+
+    assert search_supported_systems_from_request("How can you help me?") == []
