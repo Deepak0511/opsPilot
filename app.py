@@ -38,6 +38,7 @@ def reset_conversation() -> None:
 	st.session_state.clear()
 	st.session_state.thread_id = create_thread_id()
 	st.session_state.chat_messages = []
+	st.session_state.ticket_created = False
 
 
 st.set_page_config(page_title="OpsPilot", page_icon="🪼", layout="wide")
@@ -50,6 +51,8 @@ if "thread_id" not in st.session_state:
 	st.session_state.thread_id = create_thread_id()
 if "chat_messages" not in st.session_state:
 	st.session_state.chat_messages = []
+if "ticket_created" not in st.session_state:
+	st.session_state.ticket_created = False
 
 with st.sidebar:
 	st.title("OpsPilot")
@@ -71,7 +74,7 @@ for message in st.session_state.chat_messages:
 	with st.chat_message(message["role"]):
 		st.markdown(message["content"])
 
-if prompt := st.chat_input("How can I help you?"):
+if prompt := st.chat_input("How can I help you?", disabled=st.session_state.get("ticket_created", False)):
 	st.session_state.chat_messages.append({"role": "user", "content": prompt})
 	with st.chat_message("user"):
 		st.markdown(prompt)
@@ -132,10 +135,22 @@ if prompt := st.chat_input("How can I help you?"):
 			response = "\n\n".join(responses)
 			if not response:
 				response = "I could not generate a response. Please try again."
+
+			# Check if a ticket was successfully created in this turn
+			new_ticket = False
+			if "✅ **Ticket action completed successfully.**" in response:
+				new_ticket = True
+				st.session_state.ticket_created = True
+				response += "\n\n**A designated IT representative will connect with you shortly. Please reset the conversation to report a new issue.**"
+
 			st.markdown(response)
 			st.session_state.chat_messages.append(
 				{"role": "assistant", "content": response}
 			)
+			
 		except Exception:
 			log.exception("OpsPilot request failed")
 			st.error("Something went wrong while handling your request. Please try again.")
+
+	if new_ticket:
+		st.rerun()
