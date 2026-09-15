@@ -24,8 +24,13 @@ def flush_chat_db():
 
     # Delete the database file entirely to flush it
     try:
-        os.remove(db_path)
-        print("Successfully removed chat database file.")
+        if os.path.exists(db_path):
+            os.remove(db_path)
+        if os.path.exists(db_path + "-wal"):
+            os.remove(db_path + "-wal")
+        if os.path.exists(db_path + "-shm"):
+            os.remove(db_path + "-shm")
+        print("Successfully removed chat database files (including WAL).")
     except Exception as e:
         print(f"Error removing database file: {e}")
         print("Attempting to connect and drop tables instead...")

@@ -74,7 +74,7 @@ def search_tickets_tool(employee_id: str, title: Optional[str] = None, descripti
 
     # Strict + Medium pass — let the DB do the heavy lifting
     tickets = ticket_repository.search_tickets(
-        title=title, description=description, category=category,
+        title=None, description=None, category=category,
         employee_id=employee_id, system_id=system_id, assigned_to=assigned_to,
         start_date=created_date.isoformat() if created_date else None, 
         end_date=created_date.isoformat() if created_date else None

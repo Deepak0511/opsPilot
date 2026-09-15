@@ -111,6 +111,28 @@ def generate_large_dataset():
         ("Snowflake", "Data", "data warehouse, sql, tables, views, query, compute, storage, analytics, schema"),
         ("Tableau", "Data", "bi, reporting, dashboards, visualization, charts, data source, extract, analytics"),
         ("Airflow", "Data", "data engineering, etl, dags, scheduling, pipelines, tasks, orchestration, jobs"),
+        
+        # Day-to-Day Desktop Apps
+        ("Google Chrome", "Software", "browser, web, internet, surf, chrome, google, extension, cache, cookies"),
+        ("Mozilla Firefox", "Software", "browser, web, internet, surf, firefox, mozilla, extension, cache, cookies"),
+        ("Microsoft Edge", "Software", "browser, web, internet, surf, edge, microsoft, extension, cache, cookies"),
+        ("Microsoft Teams", "Software", "chat, video call, meeting, conferencing, screen share, teams, collaboration"),
+        ("WebEx", "Software", "video call, conferencing, meeting, cisco, webex, screen share"),
+        ("Adobe Acrobat Reader", "Software", "pdf, reader, document, sign, print, adobe, acrobat"),
+        ("Adobe Creative Cloud", "Software", "photoshop, illustrator, premiere, design, creative, adobe, cc"),
+        ("Notion", "Software", "notes, wiki, documentation, database, pages, workspace, productivity"),
+        ("Evernote", "Software", "notes, notebook, sync, productivity, evernote"),
+        ("OneNote", "Software", "notes, notebook, microsoft, office, onenote, sync"),
+        ("VLC Media Player", "Software", "video, audio, media player, vlc, playback"),
+        ("Notepad++", "Software", "text editor, code, notepad++, developer, text"),
+        ("VS Code", "Software", "ide, code editor, visual studio code, vscode, developer, programming, typescript, python"),
+        ("IntelliJ IDEA", "Software", "ide, java, code editor, intellij, jetbrains, developer, programming"),
+        ("Postman", "Software", "api, testing, rest, http, request, postman, developer"),
+        ("Docker Desktop", "Software", "docker, containers, virtualization, image, developer, desktop"),
+        ("1Password", "Software", "password manager, vault, security, secrets, 1password"),
+        ("LastPass", "Software", "password manager, vault, security, secrets, lastpass"),
+        ("Spotify", "Software", "music, streaming, audio, podcast, spotify"),
+        ("7-Zip", "Software", "archive, zip, unzip, extract, compress, rar, 7z, 7-zip"),
     ]
     
     systems = []
@@ -161,8 +183,8 @@ def generate_large_dataset():
     kb_articles = []
     kb_count = 1
     
-    # Generate KBs only for the top 50 real world systems to avoid bloating the KB too much
-    for sys_id, name, status, desc, lc in systems[:50]:
+    # Generate KBs only for the top 100 real world systems to avoid bloating the KB too much
+    for sys_id, name, status, desc, lc in systems[:100]:
         sys_short = name.split(" ")[0]
         for title_tmpl, cat, content_tmpl, tags_tmpl in kb_templates:
             if random.random() > 0.4: # 60% chance
@@ -170,6 +192,11 @@ def generate_large_dataset():
                 content = content_tmpl.format(sys=name)
                 tags = tags_tmpl.format(sys_lower=sys_short.lower())
                 
+                # Inherit system tags so the KB is discoverable via colloquial terms (e.g. 'vpn' for Cisco Meraki)
+                sys_tags = desc.split("Tags: ")[1] if "Tags: " in desc else ""
+                if sys_tags:
+                    tags = tags + ", " + sys_tags
+                    
                 extra_tags = random.sample(["error", "fix", "guide", "help", "support", "issue", "problem", "tutorial", "setup", "config", "sysadmin"], 3)
                 tags = tags + ", " + ", ".join(extra_tags)
                 
@@ -210,8 +237,8 @@ def generate_large_dataset():
     num_tickets = 150
     for _ in range(num_tickets):
         emp_id = random.choice(employees)[0]
-        # Pick from the top 50 real systems for realistic tickets
-        sys_tuple = random.choice(systems[:50])
+        # Pick from the top 100 real systems for realistic tickets
+        sys_tuple = random.choice(systems[:100])
         sys_id = sys_tuple[0]
         sys_name = sys_tuple[1]
         sys_short = sys_name.split(" ")[0].lower()
