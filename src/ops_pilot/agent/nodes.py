@@ -249,14 +249,18 @@ def infrastructure_context_check_node(state: AgentState) -> dict:
             **_step_update(state, "INFRASTRUCTURE_CONTEXT_CHECK", reset=True),
         }
 
+    # CONTEXT LOCK: If we are already in a conversation branch and have a system context, lock it in.
+    if state.infrastructure_context_status == "FOUND" and state.current_branch:
+        log.info("Context Lock engaged: Bypassing search to preserve existing context.")
+        return {
+            "infrastructure_context_status": "FOUND",
+            **_step_update(state, "INFRASTRUCTURE_CONTEXT_CHECK", reset=True),
+        }
+
     request = _latest_human_request(state)
     matches = system_repository.search_supported_systems_from_request(request)
     
-    # Preserve existing context during a multi-turn conversation if no new system is mentioned
-    if not matches and state.infrastructure_context_status == "FOUND" and state.current_branch:
-        matches = state.infrastructure_context
-        context_status = "FOUND"
-    elif not matches:
+    if not matches:
         context_status = "NOT_FOUND"
     elif len(matches) == 1:
         context_status = "FOUND"
@@ -334,6 +338,7 @@ def cancel_pending_ticket_change_node(state: AgentState) -> dict:
         "pending_ticket_draft": None,
         "awaiting_ticket_confirmation": False,
         "ticket_confirmation_decision": "CANCELLED",
+        "infrastructure_context_status": "FOUND",
         **_step_update(state, "CANCEL_PENDING_TICKET_CHANGE"),
     }
 
@@ -411,5 +416,6 @@ def apply_confirmed_ticket_change_node(state: AgentState) -> dict:
         "pending_ticket_draft": None,
         "awaiting_ticket_confirmation": False,
         "ticket_confirmation_decision": "CONFIRMED",
+        "infrastructure_context_status": "FOUND",
         **_step_update(state, "APPLY_CONFIRMED_TICKET_CHANGE"),
     }
