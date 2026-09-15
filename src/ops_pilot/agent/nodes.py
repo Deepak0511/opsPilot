@@ -21,6 +21,7 @@ from ops_pilot.prompts.system_prompt import (
     INFRASTRUCTURE_MANAGER_PROMPT,
     TICKET_READ_MANAGER_PROMPT,
     TICKET_WRITE_MANAGER_PROMPT,
+    INFRASTRUCTURE_KEYWORD_EXTRACTION_PROMPT
 )
 from ops_pilot.utils.large_language_models import load_llm
 from ops_pilot.utils.logger import log
@@ -260,15 +261,11 @@ def infrastructure_context_check_node(state: AgentState) -> dict:
     request = _latest_human_request(state)
     matches = system_repository.search_supported_systems_from_request(request)
     
-    if len(matches) > 5:
-        log.info("Too many matches ({}). Engaging LLM keyword extraction fallback.", len(matches))
+    if len(matches) > 1:
+        log.info("Ambiguous matches ({}). Engaging LLM keyword extraction fallback to find the best match.", len(matches))
         from ops_pilot.utils.large_language_models import load_llm
         llm = load_llm()
-        prompt = (
-            "Extract the core IT system or application name from this user request. "
-            "Return ONLY 1 to 3 keywords representing the specific system name. "
-            f"User request: {request}"
-        )
+        prompt = INFRASTRUCTURE_KEYWORD_EXTRACTION_PROMPT.format(request=request)
         refined_keywords = llm.invoke(prompt).content
         log.info("LLM refined keywords: {}", refined_keywords)
         matches = system_repository.search_supported_systems_from_request(refined_keywords)
@@ -277,7 +274,7 @@ def infrastructure_context_check_node(state: AgentState) -> dict:
         context_status = "NOT_FOUND"
     elif len(matches) == 1:
         context_status = "FOUND"
-    elif len(matches) <= 5:
+    elif len(matches) <= 3:
         context_status = "AMBIGUOUS"
     else:
         # Even after LLM refinement, it matched too many systems. Treat as not found.

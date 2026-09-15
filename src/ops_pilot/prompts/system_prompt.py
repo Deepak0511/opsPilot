@@ -89,6 +89,13 @@ Search strategy:
 Use the provided tools to search systems and report their status.
 Do not search the knowledge base or create tickets."""
 
+# ── Infrastructure Keyword Extraction Prompt ──
+INFRASTRUCTURE_KEYWORD_EXTRACTION_PROMPT = """Extract the core IT system, hardware, or application name from this user request. 
+Return ONLY 1 to 3 keywords representing the specific system name. 
+Provide the absolute best single match if the category is clear (e.g., if it's a 'broken monitor', just return 'hardware'). 
+Do NOT return generic ambiguous words that would match everything. 
+User request: {request}"""
+
 # ── Ticket Reader Prompt ──
 # Techniques used:
 # 1. Role-Prompting
