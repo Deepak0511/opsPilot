@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpsPilot — Capstone Presentation</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --r-background-color: #0a0a1a;
+    --r-main-font: 'Inter', sans-serif;
+    --r-heading-font: 'Inter', sans-serif;
+    --r-code-font: 'JetBrains Mono', monospace;
+    --r-main-font-size: 28px;
+    --r-main-color: #e2e8f0;
+    --r-heading-color: #f1f5f9;
+    --r-link-color: #818cf8;
+    --accent: #818cf8;
+    --accent2: #34d399;
+    --accent3: #f472b6;
+    --accent4: #fbbf24;
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.08);
+  }
+  .reveal { font-weight: 300; }
+  .reveal h1, .reveal h2, .reveal h3 { font-weight: 700; letter-spacing: -0.02em; text-transform: none; }
+  .reveal h1 { font-size: 2.4em; }
+  .reveal h2 { font-size: 1.6em; }
+  .reveal h3 { font-size: 1.2em; color: var(--accent); }
+  .reveal code { font-family: var(--r-code-font); font-size: 0.85em; }
+  .reveal pre code { font-size: 0.7em; line-height: 1.5; padding: 1em; border-radius: 12px; }
+  .reveal section { text-align: left; }
+
+  /* Title slide centered */
+  .reveal .title-slide { text-align: center; }
+  .reveal .title-slide h1 { font-size: 3em; background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .reveal .title-slide .subtitle { font-size: 1.3em; color: var(--accent2); font-weight: 500; margin-top: 0.3em; }
+  .reveal .title-slide .meta { font-size: 0.8em; color: #94a3b8; margin-top: 2em; }
+
+  /* Centered slides */
+  .centered { text-align: center; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2em 1.5em; margin: 0.5em 0; }
+  .card h3 { margin-top: 0; font-size: 1em; }
+  .card p, .card li { font-size: 0.8em; color: #cbd5e1; }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1em; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.8em; }
+
+  /* Stat boxes */
+  .stat { text-align: center; padding: 1em; }
+  .stat .number { font-size: 2.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat .label { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.3em; }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 0.2em 0.7em; border-radius: 20px; font-size: 0.65em; font-weight: 500; margin: 0.15em; }
+  .tag-purple { background: rgba(129,140,248,0.2); color: var(--accent); border: 1px solid rgba(129,140,248,0.3); }
+  .tag-green { background: rgba(52,211,153,0.2); color: var(--accent2); border: 1px solid rgba(52,211,153,0.3); }
+  .tag-pink { background: rgba(244,114,182,0.2); color: var(--accent3); border: 1px solid rgba(244,114,182,0.3); }
+  .tag-yellow { background: rgba(251,191,36,0.2); color: var(--accent4); border: 1px solid rgba(251,191,36,0.3); }
+
+  /* Tables */
+  .reveal table { font-size: 0.7em; width: 100%; border-collapse: collapse; margin: 0.8em 0; }
+  .reveal table th { background: var(--surface2); color: var(--accent); font-weight: 600; text-align: left; padding: 0.6em 0.8em; border-bottom: 2px solid rgba(129,140,248,0.3); }
+  .reveal table td { padding: 0.5em 0.8em; border-bottom: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; }
+  .reveal table tr:hover td { background: var(--surface); }
+
+  /* Lists */
+  .reveal ul, .reveal ol { font-size: 0.85em; }
+  .reveal li { margin-bottom: 0.4em; color: #cbd5e1; }
+  .reveal li strong { color: #f1f5f9; }
+
+  /* Flow diagram text */
+  .flow { font-size: 0.75em; text-align: center; }
+  .flow-box { display: inline-block; padding: 0.5em 1em; border-radius: 10px; margin: 0 0.2em; font-weight: 500; }
+  .flow-arrow { color: #94a3b8; font-size: 1.2em; vertical-align: middle; margin: 0 0.3em; }
+
+  /* Comparison columns */
+  .vs-col { padding: 1em; border-radius: 12px; }
+  .vs-before { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+  .vs-after { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); }
+
+  /* Section divider */
+  .section-divider { text-align: center; }
+  .section-divider h2 { font-size: 2em; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .section-divider p { color: #94a3b8; font-size: 0.9em; }
+
+  /* Emoji icons for node types */
+  .node-icon { font-size: 1.4em; margin-right: 0.3em; vertical-align: middle; }
+
+  /* Small text */
+  .small { font-size: 0.7em; color: #94a3b8; }
+  .medium { font-size: 0.8em; }
+
+  /* Highlight */
+  .hl { color: var(--accent); font-weight: 600; }
+  .hl-green { color: var(--accent2); font-weight: 600; }
+  .hl-pink { color: var(--accent3); font-weight: 600; }
+  .hl-yellow { color: var(--accent4); font-weight: 600; }
+
+  /* Mermaid overrides */
+  .mermaid { font-size: 0.6em; }
+  .mermaid svg { max-height: 500px; }
+
+  /* Progress bar */
+  .reveal .progress { color: var(--accent); height: 4px; }
+
+  /* Slide number */
+  .reveal .slide-number { font-family: var(--r-code-font); font-size: 0.5em; color: #475569; }
+
+  /* Fragment highlight */
+  .reveal .fragment.highlight-current-blue.current-fragment { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title -->
+<!-- ============================================================ -->
+<section class="title-slide" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h1>🪼 OpsPilot</h1>
+  <div class="subtitle">AI-Powered IT Operations Assistant</div>
+  <p style="color: #94a3b8; margin-top: 1em;">GenAI Capstone Project — Project 3</p>
+  <div class="meta">
+    <p><strong style="color: #e2e8f0;">Deepak Kumar Chaudhary</strong></p>
+    <p>deepak.techprofile@gmail.com</p>
+    <p style="margin-top: 1em;">September 2026</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: Problem Statement -->
+<!-- ============================================================ -->
+<section>
+  <h2>🎯 The Problem</h2>
+  <div class="card" style="border-left: 4px solid #ef4444;">
+    <p style="font-size: 0.95em; color: #f1f5f9;">Corporate IT Service Desks are overwhelmed with <strong>repetitive, low-complexity requests</strong> that consume skilled engineering time.</p>
+  </div>
+  <div class="grid-3" style="margin-top: 1em;">
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2em;">⏳</div>
+      <p><strong>Long Wait Times</strong><br>Employees wait for simple resolutions like KB lookups and password resets</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2em;">🔄</div>
+      <p><strong>Repetitive Triage</strong><br>IT staff spend time classifying tickets instead of resolving them</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2em;">📝</div>
+      <p><strong>Manual Data Entry</strong><br>Incident reports require gathering IDs, system names, and categories manually</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: Solution -->
+<!-- ============================================================ -->
+<section>
+  <h2>💡 The Solution — OpsPilot</h2>
+  <div class="card">
+    <p style="font-size: 0.95em; color: #f1f5f9;"><strong>OpsPilot</strong> is an autonomous, first-line virtual IT service desk assistant for <span class="hl">Patliputra-Corp</span>.</p>
+    <p>Powered by <span class="hl-green">Agentic AI</span> and <span class="hl">LangGraph</span>, it understands natural language, dynamically routes intents, and interfaces with corporate databases — all within a multi-turn conversational interface.</p>
+  </div>
+  <div class="grid-4" style="margin-top: 1em;">
+    <div class="stat card">
+      <div class="number">13</div>
+      <div class="label">Graph Nodes</div>
+    </div>
+    <div class="stat card">
+      <div class="number">28</div>
+      <div class="label">Guardrails</div>
+    </div>
+    <div class="stat card">
+      <div class="number">4</div>
+      <div class="label">Specialist Agents</div>
+    </div>
+    <div class="stat card">
+      <div class="number">5</div>
+      <div class="label">DB Tables</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: SDLC -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🔄 SDLC Approach</h2>
+  <p>How I built it — from brainstorm to production</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: SDLC -->
+<!-- ============================================================ -->
+<section>
+  <h2>🔄 Development Lifecycle</h2>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <h3>Phase 1 — Foundation</h3>
+        <ul>
+          <li>SQLite schema design (5 tables)</li>
+          <li>Pydantic data models</li>
+          <li>Repository layer (CRUD)</li>
+          <li>Seed scripts for test data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Phase 2 — Agent Core</h3>
+        <ul>
+          <li>LangGraph StateGraph setup</li>
+          <li>Triage + 4 specialist nodes</li>
+          <li>Tool binding per manager</li>
+          <li>ReAct tool loop</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Phase 3 — Guardrails & Polish</h3>
+        <ul>
+          <li>Bounded-context gate</li>
+          <li>Two-phase ticket mutation</li>
+          <li>Error handling decorator</li>
+          <li>Prompt engineering refinement</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Phase 4 — UI & Testing</h3>
+        <ul>
+          <li>Streamlit conversational UI</li>
+          <li>Checkpoint persistence (SqliteSaver)</li>
+          <li>pytest test suite</li>
+          <li>Graph visualization tooling</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: TECH STACK -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🛠️ Technology Stack</h2>
+  <p>Chosen for zero-cost-when-idle, self-contained operation</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: Tech Stack -->
+<!-- ============================================================ -->
+<section>
+  <h2>🛠️ Technology Stack & Why</h2>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>Technology</th><th>Why (Java Analog)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Language</strong></td><td>Python 3.14+</td><td>GenAI ecosystem is Python-first</td></tr>
+      <tr><td><strong>Orchestration</strong></td><td>LangGraph (StateGraph)</td><td>Like Spring State Machine, but for LLMs</td></tr>
+      <tr><td><strong>LLM</strong></td><td>OpenAI GPT-4o-mini / Gemini 3.5 Flash Lite</td><td>Switchable via config.yaml</td></tr>
+      <tr><td><strong>Database</strong></td><td>SQLite3 (embedded)</td><td>Like Java's H2 — zero cost when idle</td></tr>
+      <tr><td><strong>Checkpointing</strong></td><td>langgraph-checkpoint-sqlite</td><td>Like HttpSession, but graph-aware</td></tr>
+      <tr><td><strong>Data Models</strong></td><td>Pydantic BaseModel</td><td>Like Java Records + Bean Validation</td></tr>
+      <tr><td><strong>Config</strong></td><td>config.yaml + .env</td><td>Like Spring Boot's application.yml</td></tr>
+      <tr><td><strong>UI</strong></td><td>Streamlit</td><td>Rapid prototyping, no frontend build step</td></tr>
+      <tr><td><strong>Testing</strong></td><td>pytest + conftest.py</td><td>Like JUnit + @Before fixtures</td></tr>
+      <tr><td><strong>Logging</strong></td><td>Loguru</td><td>Like SLF4J/Logback but simpler</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Architecture -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🏗️ Architecture</h2>
+  <p>The multi-agent StateGraph — the heart of OpsPilot</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Architecture Overview -->
+<!-- ============================================================ -->
+<section>
+  <h2>🏗️ Agent Graph — High Level</h2>
+  <div class="mermaid">
+    <pre>
+flowchart TD
+    Start(["🚀 User Query"]) --> Gate["🔒 Infrastructure Context Check"]
+    Gate -->|FOUND| Triage["🧠 Triage Manager"]
+    Gate -->|NOT_FOUND| OOS["🚫 Out of Scope"]
+    Gate -->|AMBIGUOUS| Clarify["❓ Clarify Context"]
+    Gate -->|PENDING| ConfCheck["✅ Ticket Confirmation"]
+    OOS --> E(["🏁 END"])
+    Clarify --> E
+    Triage --> InfraMgr["🖥️ Infrastructure Mgr"]
+    Triage --> KBMgr["🔍 KB Manager"]
+    Triage --> TktReadMgr["🎫 Ticket Read Mgr"]
+    Triage --> TktWriteMgr["📝 Ticket Write Mgr"]
+    InfraMgr <-->|ReAct| Tools["⚙️ Tool Executor"]
+    KBMgr <-->|ReAct| Tools
+    TktReadMgr <-->|ReAct| Tools
+    TktWriteMgr <-->|ReAct| Tools
+    InfraMgr --> E
+    KBMgr --> E
+    TktReadMgr --> E
+    TktWriteMgr --> E
+    ConfCheck -->|YES| Apply["✅ Apply Change"]
+    ConfCheck -->|NO| Cancel["❌ Cancel"]
+    ConfCheck -->|UNCLEAR| AskAgain["❓ Clarify"]
+    Apply --> E
+    Cancel --> E
+    AskAgain --> E
+    style Gate fill:#7c3aed,stroke:#6d28d9,color:#fff
+    style Triage fill:#2563eb,stroke:#1d4ed8,color:#fff
+    style InfraMgr fill:#059669,stroke:#047857,color:#fff
+    style KBMgr fill:#059669,stroke:#047857,color:#fff
+    style TktReadMgr fill:#059669,stroke:#047857,color:#fff
+    style TktWriteMgr fill:#059669,stroke:#047857,color:#fff
+    style Tools fill:#475569,stroke:#334155,color:#fff
+    style ConfCheck fill:#d97706,stroke:#b45309,color:#fff
+    </pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Bounded-Context Gate -->
+<!-- ============================================================ -->
+<section>
+  <h2>🔒 Bounded-Context Gate</h2>
+  <p class="medium">Every request is validated against the Patliputra-Corp systems catalog <strong>before</strong> any LLM processes it.</p>
+  <div class="grid-2" style="margin-top: 0.8em;">
+    <div>
+      <div class="card">
+        <h3>How It Works</h3>
+        <ol style="font-size: 0.75em;">
+          <li>Extract keywords from user message</li>
+          <li>Filter through 30+ stop words</li>
+          <li>Score-match against systems catalog</li>
+          <li>If ambiguous (>1 match) → LLM refines keywords</li>
+          <li>Route based on match count</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Context Lock</h3>
+        <p>Once a system is matched, subsequent messages <strong>reuse the locked context</strong> — preventing mid-conversation drift.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Routing Outcomes</h3>
+        <table>
+          <tr><td><span class="tag tag-green">1 match</span></td><td>→ TRIAGE_MANAGER</td></tr>
+          <tr><td><span class="tag tag-yellow">2-3 matches</span></td><td>→ Clarify (ask user)</td></tr>
+          <tr><td><span class="tag tag-pink">0 or >3</span></td><td>→ Out of Scope</td></tr>
+          <tr><td><span class="tag tag-purple">Pending</span></td><td>→ Ticket Confirmation</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: Tool Binding -->
+<!-- ============================================================ -->
+<section>
+  <h2>🔧 Strict Tool Binding Per Manager</h2>
+  <p class="medium">Each manager's LLM can <strong>only request</strong> its authorized tools. The shared ToolNode executor knows all tools, but access is isolated.</p>
+  <table style="margin-top: 1em;">
+    <thead>
+      <tr><th>Manager</th><th>Bound Tools</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="hl">INFRASTRUCTURE_MANAGER</span></td><td><code>search_systems</code>, <code>count_systems</code></td></tr>
+      <tr><td><span class="hl">KNOWLEDGE_BASE_MANAGER</span></td><td><code>search_kb</code>, <code>count_kb_articles</code></td></tr>
+      <tr><td><span class="hl">TICKET_READ_MANAGER</span></td><td><code>search_ticket_by_id</code>, <code>search_tickets</code>, <code>search_employee</code>, <code>search_systems</code></td></tr>
+      <tr><td><span class="hl">TICKET_WRITE_MANAGER</span></td><td><code>search_employee</code>, <code>search_systems</code>, <code>search_ticket_by_id</code>, <code>search_tickets</code>, <code>TicketDraft</code></td></tr>
+      <tr><td><span class="hl">TRIAGE_MANAGER</span></td><td><em>No tools — structured output only</em></td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top: 1em;">⚠️ TICKET_WRITE_MANAGER never directly calls create/update tools. It emits a TicketDraft that the node intercepts.</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Agentic AI Patterns -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🤖 Agentic AI Design Patterns</h2>
+  <p>What makes this more than just an API wrapper</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: Agentic Patterns -->
+<!-- ============================================================ -->
+<section>
+  <h2>🤖 Agentic AI Patterns Used</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>🧩 Multi-Agent Specialization</h3>
+      <p>5 specialized LLM agents, each with its own system prompt, tool set, and domain boundary. No single "god" agent.</p>
+    </div>
+    <div class="card">
+      <h3>🔄 ReAct Loop</h3>
+      <p>Manager → Tool → Manager → Tool → ... → Final Answer. Each manager can call tools iteratively until it has enough information.</p>
+    </div>
+    <div class="card">
+      <h3>📋 Structured Output</h3>
+      <p>Triage uses <code>with_structured_output(TriageDecision)</code> — the LLM must emit one of exactly 4 Literal values. No free-text routing.</p>
+    </div>
+    <div class="card">
+      <h3>🛡️ Human-in-the-Loop</h3>
+      <p>Ticket mutations require explicit user confirmation. The draft is persisted in state, and a deterministic regex node — not the LLM — parses yes/no.</p>
+    </div>
+    <div class="card">
+      <h3>🔒 Deterministic Gating</h3>
+      <p>The bounded-context gate runs <em>before</em> any LLM, using a scored keyword search. The LLM only refines keywords when ambiguous.</p>
+    </div>
+    <div class="card">
+      <h3>💾 Stateful Conversations</h3>
+      <p>SqliteSaver checkpoints preserve full graph state, ticket drafts, and conversation history across browser refreshes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Prompt Engineering -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>✍️ Prompt Engineering</h2>
+  <p>Techniques applied across 5 system prompts</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Prompt Engineering -->
+<!-- ============================================================ -->
+<section>
+  <h2>✍️ Prompt Engineering Techniques</h2>
+  <table>
+    <thead>
+      <tr><th>Technique</th><th>Where Used</th><th>Effect</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Role-Prompting</strong></td>
+        <td>All 5 managers</td>
+        <td>"Your ONLY job is to…" — scopes each agent to its domain</td>
+      </tr>
+      <tr>
+        <td><strong>Negative-Prompting</strong></td>
+        <td>KB, Infra, Ticket Read</td>
+        <td>"Do NOT create tickets", "strictly read-only" — prevents cross-domain actions</td>
+      </tr>
+      <tr>
+        <td><strong>Chain-of-Thought</strong></td>
+        <td>Triage Manager</td>
+        <td>Step-by-step workflow description guides classification reasoning</td>
+      </tr>
+      <tr>
+        <td><strong>Constrained Output</strong></td>
+        <td>Triage Manager</td>
+        <td>Pydantic Literal enforces exactly 4 valid routing values</td>
+      </tr>
+      <tr>
+        <td><strong>Dependency Prompting</strong></td>
+        <td>Ticket Write Manager</td>
+        <td>"If you need a system ID… use the respective tools first"</td>
+      </tr>
+      <tr>
+        <td><strong>Error Masking</strong></td>
+        <td>Ticket Write Manager</td>
+        <td>Internal tool errors wrapped in polite user-facing language</td>
+      </tr>
+      <tr>
+        <td><strong>No-Open-World</strong></td>
+        <td>KB Manager</td>
+        <td>Must not provide advice for services outside Patliputra-Corp catalog</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Guardrails -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🛡️ Guardrails</h2>
+  <p>28 mechanisms across 5 layers — defense in depth</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: Guardrails Overview -->
+<!-- ============================================================ -->
+<section>
+  <h2>🛡️ Guardrails — Layered Defense</h2>
+  <div class="grid-2">
+    <div>
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <h3>🏗️ Graph-Level (8)</h3>
+        <ul>
+          <li>Bounded-context gate</li>
+          <li>Context lock (mid-conversation)</li>
+          <li>Guidance-request override</li>
+          <li>200-step execution budget</li>
+          <li>Router validation (RuntimeError)</li>
+          <li>Two-phase ticket mutation</li>
+          <li>Regex-based confirmation</li>
+          <li>Draft completeness check</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent2);">
+        <h3>🔧 Tool-Level (4)</h3>
+        <ul>
+          <li>Strict tool binding per manager</li>
+          <li>@handle_tool_errors decorator</li>
+          <li>ToolNode error passthrough</li>
+          <li>TicketDraft interception</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="border-left: 4px solid var(--accent3);">
+        <h3>💾 Data-Level (9)</h3>
+        <ul>
+          <li>Pydantic field validation</li>
+          <li>Whitelist validators (status, priority, type)</li>
+          <li>ID format regex enforcement</li>
+          <li>Parameterized SQL (no injection)</li>
+          <li>Duplicate ticket detection</li>
+          <li>Foreign key validation</li>
+          <li>Stop-word filtering</li>
+          <li>Sequential ID generation</li>
+          <li>Ambiguous employee guard (>3)</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent4);">
+        <h3>🖥️ Prompt + UI Level (7)</h3>
+        <ul>
+          <li>Role/Negative/CoT prompting</li>
+          <li>Priority matrix in prompt</li>
+          <li>Chat disable after ticket creation</li>
+          <li>Generic error messages to user</li>
+          <li>Recursion limit = 12</li>
+          <li>Fallback response on empty output</li>
+          <li>No-open-world KB constraint</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Challenges -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>⚡ Challenges & Fixes</h2>
+  <p>Problems encountered during development and how I solved them</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: Challenge 1 -->
+<!-- ============================================================ -->
+<section>
+  <h2>⚡ Challenge 1 — Keyword Explosion</h2>
+  <div class="grid-2">
+    <div class="vs-col vs-before">
+      <h3 style="color: #ef4444;">❌ Before</h3>
+      <p class="medium">Naive keyword search on user messages matched <strong>hundreds of systems</strong> for generic words like "app", "system", "help".</p>
+      <pre><code class="language-plaintext">"My app is broken"
+→ Matched 47 systems containing "app"
+→ Agent confused, hallucinated responses</code></pre>
+    </div>
+    <div class="vs-col vs-after">
+      <h3 style="color: var(--accent2);">✅ After</h3>
+      <p class="medium"><strong>Stop-word filtering</strong> (30+ words) + <strong>LLM keyword refinement</strong> fallback reduces to 1-3 specific matches.</p>
+      <pre><code class="language-plaintext">"My app is broken"
+→ Stop words removed: "my", "is", "broken"
+→ Remaining: "app" → LLM refines → "app"
+→ Still ambiguous → ask user to clarify</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13: Challenge 2 -->
+<!-- ============================================================ -->
+<section>
+  <h2>⚡ Challenge 2 — Guidance vs. Action Misrouting</h2>
+  <div class="grid-2">
+    <div class="vs-col vs-before">
+      <h3 style="color: #ef4444;">❌ Before</h3>
+      <p class="medium">"<em>How do I raise a reimbursement request?</em>" was classified as <code>TICKET_ACTION_REQUEST</code> by the LLM.</p>
+      <p class="medium">The agent tried to <strong>create a ticket</strong> instead of explaining the process.</p>
+    </div>
+    <div class="vs-col vs-after">
+      <h3 style="color: var(--accent2);">✅ After</h3>
+      <p class="medium">Regex guard detects <code>how do I</code>, <code>how can I</code>, <code>what are the steps</code> patterns.</p>
+      <p class="medium">Overrides <code>TICKET_ACTION_REQUEST</code> → <code>INFRASTRUCTURE_LOOKUP_REQUEST</code> with an updated routing reason.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 14: Challenge 3 -->
+<!-- ============================================================ -->
+<section>
+  <h2>⚡ Challenge 3 — Error Handling Strategy</h2>
+  <div class="card">
+    <h3>Decision Record: Tool Error Handling</h3>
+    <div class="grid-2" style="margin-top: 0.5em;">
+      <div>
+        <p class="medium"><strong>Option 1:</strong> Rely only on <code>ToolNode(handle_tool_errors=True)</code></p>
+        <p class="small">Treats all exceptions identically. Sends raw stack traces to the LLM. Risks information leakage.</p>
+      </div>
+      <div>
+        <p class="medium"><strong>Option 2:</strong> <code>@handle_tool_errors</code> decorator ✅</p>
+        <p class="small">Differentiates <code>ValueError</code> (user input) from <code>Exception</code> (system error). Sanitizes messages to the LLM while logging full traces for developers.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top: 0.5em; border-left: 4px solid var(--accent2);">
+    <p class="medium"><strong>Result:</strong> Two-tier error handling. Validation errors give the LLM actionable feedback (<em>"Employee ID is missing"</em>). System errors return a safe generic message.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 15: Challenge 4 -->
+<!-- ============================================================ -->
+<section>
+  <h2>⚡ Challenge 4 — WAL/SHM Test Contamination</h2>
+  <div class="grid-2">
+    <div class="vs-col vs-before">
+      <h3 style="color: #ef4444;">❌ Before</h3>
+      <p class="medium">SQLite's WAL (Write-Ahead Log) and SHM files persisted between test runs.</p>
+      <p class="medium">Previous test data leaked into new runs, causing <code>IntegrityError</code> on duplicate keys and flaky test results.</p>
+    </div>
+    <div class="vs-col vs-after">
+      <h3 style="color: var(--accent2);">✅ After</h3>
+      <p class="medium">Implemented robust teardown in <code>conftest.py</code>:</p>
+      <ul class="medium">
+        <li>Session-scoped test DB with fresh schema</li>
+        <li><code>@pytest.fixture(autouse=True)</code> cleans all 5 tables before every test</li>
+        <li>Separate <code>flush_chat_db.py</code> and <code>flush_ops_db.py</code> scripts</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Data Model -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>💾 Data Model</h2>
+  <p>SQLite — like Java's H2, zero cost when idle</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 16: Data Model -->
+<!-- ============================================================ -->
+<section>
+  <h2>💾 Database Schema</h2>
+  <div class="mermaid">
+    <pre>
+erDiagram
+    employees {
+        text id PK
+        text name
+        text email
+        text department
+        text role
+        text device_type
+        text device_id
+    }
+    systems {
+        text id PK
+        text name
+        text status
+        text description
+        text last_checked
+    }
+    tickets {
+        text id PK
+        text employee_id FK
+        text system_id FK
+        text assigned_to FK
+        text title
+        text description
+        text status
+        text priority
+        text category
+        date created_date
+        date updated_date
+        text notes
+    }
+    knowledge_base {
+        text id PK
+        text title
+        text category
+        text content
+        text Incident_id
+        text tags
+    }
+    id_sequences {
+        text prefix PK
+        int next_val
+    }
+    employees ||--o{ tickets : "reports"
+    systems ||--o{ tickets : "affected"
+    employees ||--o{ tickets : "assigned_to"
+    </pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION DIVIDER: Demo -->
+<!-- ============================================================ -->
+<section class="section-divider" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h2>🎬 Live Demo</h2>
+  <p>Let's see OpsPilot in action</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 17: Demo Scenarios -->
+<!-- ============================================================ -->
+<section>
+  <h2>🎬 Demo Scenarios</h2>
+  <div class="grid-2">
+    <div class="card" style="border-left: 4px solid var(--accent2);">
+      <h3>1. KB Retrieval</h3>
+      <p>"How do I reset my VPN password?"</p>
+      <p class="small">Gate → Triage → KB Manager → search_kb → step-by-step answer</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <h3>2. Ticket Lookup</h3>
+      <p>"Check status of ticket INC-001"</p>
+      <p class="small">Gate → Triage → Ticket Read → search_by_id → status report</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--accent3);">
+      <h3>3. Ticket Creation (Multi-turn)</h3>
+      <p>"My Office 365 is freezing, raise a ticket"</p>
+      <p class="small">Gate → Triage → Write Mgr → asks EMP ID → TicketDraft → "yes" → Apply</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--accent4);">
+      <h3>4. Out-of-Scope Rejection</h3>
+      <p>"What's the weather today?"</p>
+      <p class="small">Gate → no match → Out of Scope → polite rejection</p>
+    </div>
+  </div>
+  <p class="small" style="margin-top: 1em; text-align: center;">💡 Switch to Streamlit UI for live demonstration</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 18: Future Scope -->
+<!-- ============================================================ -->
+<section>
+  <h2>🔮 Future Scope</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>🧠 Vector Search for KB</h3>
+      <p>Replace SQLite <code>LIKE</code> with ChromaDB / pgvector for semantic similarity search. Better recall for natural language queries.</p>
+    </div>
+    <div class="card">
+      <h3>🔐 RBAC & Multi-Tenant</h3>
+      <p>Role-based access control. Different permission levels for employees vs. IT admins. Tenant isolation for multiple orgs.</p>
+    </div>
+    <div class="card">
+      <h3>📊 Observability Dashboard</h3>
+      <p>LangSmith / custom dashboard for monitoring agent decisions, tool call latencies, and guardrail trigger rates.</p>
+    </div>
+    <div class="card">
+      <h3>🔗 Real Integrations</h3>
+      <p>ServiceNow, Jira Service Management, Microsoft Teams / Slack bot connector. Replace mock data with live ITSM APIs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 19: Thank You -->
+<!-- ============================================================ -->
+<section class="title-slide" data-background-gradient="radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%)">
+  <h1>🪼 Thank You</h1>
+  <div class="subtitle">Questions?</div>
+  <div class="meta" style="margin-top: 2em;">
+    <p><strong style="color: #e2e8f0;">Deepak Kumar Chaudhary</strong></p>
+    <p>deepak.techprofile@gmail.com</p>
+    <p style="margin-top: 1.5em;">
+      <span class="tag tag-purple">Python 3.14</span>
+      <span class="tag tag-green">LangGraph</span>
+      <span class="tag tag-pink">OpenAI</span>
+      <span class="tag tag-yellow">SQLite</span>
+      <span class="tag tag-purple">Streamlit</span>
+      <span class="tag tag-green">Pydantic</span>
+    </p>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    flowchart: { curve: 'basis', padding: 12 },
+    themeVariables: {
+      darkMode: true,
+      background: '#0a0a1a',
+      primaryColor: '#7c3aed',
+      primaryTextColor: '#f1f5f9',
+      primaryBorderColor: '#6d28d9',
+      lineColor: '#64748b',
+      secondaryColor: '#059669',
+      tertiaryColor: '#1e293b',
+      fontSize: '14px'
+    }
+  });
+
+  // Render Mermaid diagrams inside reveal slides
+  async function renderMermaidSlides() {
+    const mermaidDivs = document.querySelectorAll('.mermaid pre');
+    for (let i = 0; i < mermaidDivs.length; i++) {
+      const pre = mermaidDivs[i];
+      const code = pre.textContent.trim();
+      const container = pre.parentElement;
+      try {
+        const { svg } = await mermaid.render(`mermaid-${i}`, code);
+        container.innerHTML = svg;
+      } catch (e) {
+        console.error('Mermaid render error:', e);
+      }
+    }
+  }
+
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.08,
+    plugins: [RevealHighlight, RevealNotes]
+  }).then(() => {
+    renderMermaidSlides();
+  });
+</script>
+</body>
+</html>
